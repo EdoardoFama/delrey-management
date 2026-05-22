@@ -6,6 +6,7 @@ import NovaTroca from './pages/NovaTroca'
 import Pecas from './pages/Pecas'
 import PecaDetalhe from './pages/PecaDetalhe'
 import Login from './pages/Login'
+import Carro from './pages/Carro'
 
 function Layout() {
   const { pathname } = useLocation()
@@ -23,6 +24,7 @@ function Layout() {
           <Route path="/trocas/nova" element={<NovaTroca />} />
           <Route path="/pecas" element={<Pecas />} />
           <Route path="/pecas/:id" element={<PecaDetalhe />} />
+          <Route path="/carro" element={<Carro />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

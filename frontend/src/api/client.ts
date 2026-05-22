@@ -24,4 +24,14 @@ export const api = {
   deleteTroca: (id: number) => request(`/api/trocas/${id}`, { method: 'DELETE' }),
   getPecas: (q?: string) => request(`/api/pecas${q ? `?q=${encodeURIComponent(q)}` : ''}`),
   getPeca: (id: number) => request(`/api/pecas/${id}`),
+  getCarro: () => request('/api/carro'),
+  updateCarro: (body: unknown) => request('/api/carro', { method: 'PUT', body: JSON.stringify(body) }),
+  uploadCarroFoto: async (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    const res = await fetch('/api/carro/foto', { method: 'POST', credentials: 'include', body: form })
+    if (res.status === 401) { window.location.href = '/login'; throw new Error('Não autenticado') }
+    if (!res.ok) throw new Error(`Erro ${res.status}`)
+    return res.json()
+  },
 }

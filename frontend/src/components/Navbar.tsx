@@ -5,6 +5,7 @@ const links = [
   { to: '/', label: 'Dashboard' },
   { to: '/trocas', label: 'Trocas' },
   { to: '/pecas', label: 'Peças' },
+  { to: '/carro', label: 'Meu Carro' },
 ]
 
 export default function Navbar() {

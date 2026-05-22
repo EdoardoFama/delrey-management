@@ -22,5 +22,10 @@ public class Carro {
     @Column(name = "km_atual")
     private Integer kmAtual;
 
+    private String cor;
+
+    @Column(name = "foto_path")
+    private String fotoPath;
+
     private String observacoes;
 }
