@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: html(title='Dashboard', content=~{::section})}">
+<body>
+<section>
+    <h1 class="text-2xl font-bold mb-4">Dashboard</h1>
+
+    <div th:if="${carro}" class="mb-6 bg-white border rounded p-4">
+        <h2 class="font-semibold" th:text="${carro.modelo + ' ' + carro.ano + ' ' + (carro.versao ?: '')}">Carro</h2>
+        <p class="text-sm text-gray-600">
+            Motor: <span th:text="${carro.motor}">-</span> |
+            KM atual: <span th:text="${carro.kmAtual}">0</span>
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div class="bg-white border rounded p-4">
+            <div class="text-sm text-gray-500">Gasto no mês</div>
+            <div class="text-2xl font-bold">R$ <span th:text="${#numbers.formatDecimal(totalMes,1,'POINT',2,'COMMA')}">0,00</span></div>
+        </div>
+        <div class="bg-white border rounded p-4">
+            <div class="text-sm text-gray-500">Gasto no ano <span th:text="${ano}"></span></div>
+            <div class="text-2xl font-bold">R$ <span th:text="${#numbers.formatDecimal(totalAno,1,'POINT',2,'COMMA')}">0,00</span></div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white border rounded p-4">
+            <h3 class="font-semibold mb-2">Últimas trocas</h3>
+            <ul th:if="${!ultimasTrocas.empty}" class="divide-y">
+                <li th:each="t : ${ultimasTrocas}" class="py-2 flex justify-between">
+                    <span>
+                        <span th:text="${#temporals.format(t.dataTroca,'dd/MM/yyyy')}">data</span> -
+                        <span th:text="${t.peca.nome}">peça</span>
+                    </span>
+                    <span class="font-mono">R$ <span th:text="${#numbers.formatDecimal(t.valor,1,'POINT',2,'COMMA')}">0,00</span></span>
+                </li>
+            </ul>
+            <p th:if="${ultimasTrocas.empty}" class="text-gray-500 text-sm">Nenhuma troca registrada ainda.</p>
+        </div>
+
+        <div class="bg-white border rounded p-4">
+            <h3 class="font-semibold mb-2">Gasto por categoria (<span th:text="${ano}"></span>)</h3>
+            <ul th:if="${!porCategoria.empty}" class="divide-y">
+                <li th:each="c : ${porCategoria}" class="py-2 flex justify-between">
+                    <span th:text="${c[0]}">categoria</span>
+                    <span class="font-mono">R$ <span th:text="${#numbers.formatDecimal(c[1],1,'POINT',2,'COMMA')}">0,00</span></span>
+                </li>
+            </ul>
+            <p th:if="${porCategoria.empty}" class="text-gray-500 text-sm">Sem dados ainda.</p>
+        </div>
+    </div>
+</section>
+</body>
+</html>

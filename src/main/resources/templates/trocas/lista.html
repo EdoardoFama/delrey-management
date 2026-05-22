@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: html(title='Trocas', content=~{::section})}">
+<body>
+<section>
+    <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-bold">Histórico de trocas</h1>
+        <a th:href="@{/trocas/nova}" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded">+ Nova troca</a>
+    </div>
+
+    <div th:if="${trocas.empty}" class="bg-white border rounded p-6 text-center text-gray-500">
+        Nenhuma troca registrada. Comece adicionando uma!
+    </div>
+
+    <table th:if="${!trocas.empty}" class="w-full bg-white border rounded">
+        <thead class="bg-gray-100 text-left text-sm">
+        <tr>
+            <th class="p-2">Data</th>
+            <th class="p-2">Peça</th>
+            <th class="p-2">KM</th>
+            <th class="p-2">Valor</th>
+            <th class="p-2">Fornecedor</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="t : ${trocas}" class="border-t">
+            <td class="p-2" th:text="${#temporals.format(t.dataTroca,'dd/MM/yyyy')}">--</td>
+            <td class="p-2" th:text="${t.peca.nome}">peça</td>
+            <td class="p-2" th:text="${t.km}">0</td>
+            <td class="p-2 font-mono">R$ <span th:text="${#numbers.formatDecimal(t.valor,1,'POINT',2,'COMMA')}">0,00</span></td>
+            <td class="p-2 text-sm text-gray-600" th:text="${t.fornecedor}">-</td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</body>
+</html>
