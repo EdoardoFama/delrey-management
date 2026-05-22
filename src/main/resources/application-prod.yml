@@ -18,10 +18,14 @@ spring:
     console:
       enabled: false
 
-  security:
-    user:
-      name: ${APP_USER:delrey}
-      password: ${APP_PASSWORD}
-
 server:
   port: ${PORT:8080}
+
+app:
+  users:
+    admin:
+      username: ${APP_ADMIN_USERNAME}
+      password: ${APP_ADMIN_PASSWORD}
+    kaio:
+      username: ${APP_KAIO_USERNAME}
+      password: ${APP_KAIO_PASSWORD}
