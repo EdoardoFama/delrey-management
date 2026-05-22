@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import DelReyIcon from './DelReyIcon'
 
 const links = [
   { to: '/', label: 'Dashboard' },
@@ -10,8 +11,8 @@ export default function Navbar() {
   return (
     <nav className="border-b border-purple-900/40 bg-[#0d0d1a]">
       <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">🚗</span>
+        <div className="flex items-center gap-3">
+          <DelReyIcon className="h-9 w-auto" />
           <span className="font-bold text-white text-lg tracking-tight">
             Del Rey <span className="text-purple-400">1990</span>
           </span>

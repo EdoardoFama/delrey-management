@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import DelReyIcon from '../components/DelReyIcon'
 
 export default function Login() {
   const [error] = useState(() => new URLSearchParams(window.location.search).has('error'))
@@ -14,8 +15,8 @@ export default function Login() {
       <div className="relative w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-purple-600/20 border border-purple-500/30 mb-4 text-3xl">
-            🚗
+          <div className="inline-flex items-center justify-center w-24 h-16 rounded-2xl bg-purple-600/20 border border-purple-500/30 mb-4 px-3">
+            <DelReyIcon className="h-10 w-auto" />
           </div>
           <h1 className="text-2xl font-bold text-white">Del Rey Management</h1>
           <p className="text-gray-500 text-sm mt-1">Ford Del Rey 1990 · AP 1.8 Ghia</p>
