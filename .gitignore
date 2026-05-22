@@ -1,0 +1,9 @@
+target/
+data/
+uploads/
+*.iml
+.idea/
+.vscode/
+.mvn/
+HELP.md
+*.log
