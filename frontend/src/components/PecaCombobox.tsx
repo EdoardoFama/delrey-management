@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from '../api/client'
-import type { Peca, Categoria } from '../types'
+import type { Categoria, Peca } from '../types'
 
 interface Props {
   value: string
@@ -13,6 +13,11 @@ interface Props {
 const inputCls = 'w-full bg-[#0a0a12] border border-purple-900/40 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 transition-colors'
 
 export default function PecaCombobox({ value, onChange, pecas, categorias, onNovaPeca }: Props) {
+  // currentPeca é a fonte de verdade para o que está exibido — atualizada
+  // na mesma batch das chamadas onChange/setCreating, evitando flash de input vazio.
+  const [currentPeca, setCurrentPeca] = useState<Peca | null>(
+    () => (value ? (pecas.find(p => String(p.id) === value) ?? null) : null)
+  )
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
@@ -22,8 +27,15 @@ export default function PecaCombobox({ value, onChange, pecas, categorias, onNov
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const selected = pecas.find(p => String(p.id) === value)
+  // Sincroniza quando o valor vem de fora (formulário de edição pré-preenchido)
+  useEffect(() => {
+    if (!value) { setCurrentPeca(null); return }
+    if (currentPeca && String(currentPeca.id) === value) return
+    const found = pecas.find(p => String(p.id) === value)
+    if (found) setCurrentPeca(found)
+  }, [value, pecas])
 
+  // Fecha ao clicar fora
   useEffect(() => {
     function onDown(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -36,6 +48,7 @@ export default function PecaCombobox({ value, onChange, pecas, categorias, onNov
     return () => document.removeEventListener('mousedown', onDown)
   }, [])
 
+  // Foca input quando abre busca
   useEffect(() => {
     if (open && !creating) inputRef.current?.focus()
   }, [open, creating])
@@ -49,10 +62,10 @@ export default function PecaCombobox({ value, onChange, pecas, categorias, onNov
   function openSearch() {
     setSearch('')
     setOpen(true)
-    setCreating(false)
   }
 
   function selectPeca(p: Peca) {
+    setCurrentPeca(p)
     onChange(String(p.id))
     setSearch('')
     setOpen(false)
@@ -70,8 +83,11 @@ export default function PecaCombobox({ value, onChange, pecas, categorias, onNov
     setSaving(true)
     try {
       const peca = await api.createPeca({ nome: newNome.trim(), categoriaId: Number(newCatId) }) as Peca
-      onNovaPeca(peca)
+      // setCurrentPeca na mesma batch que setCreating(false) — garante que o
+      // botão de seleção renderiza direto, sem passar pelo estado de input vazio
+      setCurrentPeca(peca)
       onChange(String(peca.id))
+      onNovaPeca(peca)
       setCreating(false)
       setSearch('')
     } catch {
@@ -81,7 +97,7 @@ export default function PecaCombobox({ value, onChange, pecas, categorias, onNov
     }
   }
 
-  // ── Modo criação ────────────────────────────────────────────────
+  // ── Modo criação ─────────────────────────────────────────────────────────
   if (creating) {
     return (
       <div ref={containerRef} className="bg-[#0d0d1a] border border-purple-500/40 rounded-lg p-3 space-y-2">
@@ -120,34 +136,35 @@ export default function PecaCombobox({ value, onChange, pecas, categorias, onNov
     )
   }
 
+  // ── Modo normal ───────────────────────────────────────────────────────────
   return (
     <div ref={containerRef} className="relative">
 
-      {/* ── Peça selecionada (fechado) ── */}
-      {selected && !open ? (
+      {/* Peça selecionada — não usa input, evita onFocus acidental */}
+      {currentPeca && !open ? (
         <button
           type="button"
           onClick={openSearch}
           className="w-full text-left bg-[#0a0a12] border border-purple-900/40 rounded-lg px-3 py-2 text-sm flex items-center gap-2 hover:border-purple-500/60 transition-colors min-h-[38px]"
         >
-          <span className="text-white flex-1 truncate">{selected.nome}</span>
+          <span className="text-white flex-1 truncate">{currentPeca.nome}</span>
           <span className="text-xs bg-purple-900/40 text-purple-300 px-2 py-0.5 rounded-full shrink-0">
-            {selected.categoria.nome}
+            {currentPeca.categoria.nome}
           </span>
         </button>
       ) : (
-        /* ── Input de busca ── */
+        /* Busca */
         <input
           ref={inputRef}
           className={inputCls}
           value={search}
           onChange={e => { setSearch(e.target.value); setOpen(true) }}
           onFocus={() => setOpen(true)}
-          placeholder={selected ? `${selected.nome}` : 'Buscar ou criar peça...'}
+          placeholder="Buscar ou criar peça..."
         />
       )}
 
-      {/* ── Dropdown ── */}
+      {/* Dropdown */}
       {open && (
         <div className="absolute z-50 w-full mt-1 bg-[#0d0d1a] border border-purple-900/40 rounded-lg shadow-2xl max-h-60 overflow-y-auto">
           {filtered.length === 0 && (
