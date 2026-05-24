@@ -1,5 +1,6 @@
 package com.delrey.api;
 
+import com.delrey.peca.CategoriaPecaRepository;
 import com.delrey.peca.Peca;
 import com.delrey.peca.PecaRepository;
 import com.delrey.troca.TrocaRepository;
@@ -7,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
 @RestController
@@ -15,10 +17,13 @@ public class PecaApiController {
 
     private final PecaRepository pecaRepository;
     private final TrocaRepository trocaRepository;
+    private final CategoriaPecaRepository categoriaRepository;
 
-    public PecaApiController(PecaRepository pecaRepository, TrocaRepository trocaRepository) {
+    public PecaApiController(PecaRepository pecaRepository, TrocaRepository trocaRepository,
+                              CategoriaPecaRepository categoriaRepository) {
         this.pecaRepository = pecaRepository;
         this.trocaRepository = trocaRepository;
+        this.categoriaRepository = categoriaRepository;
     }
 
     record CategoriaDto(Long id, String nome) {}
@@ -34,6 +39,14 @@ public class PecaApiController {
                 p.getCodigoOem(), p.getFabricante(), p.getIntervaloKm(), p.getIntervaloMeses(), p.getObservacoes());
     }
 
+    @GetMapping("/categorias")
+    public List<CategoriaDto> listarCategorias() {
+        return categoriaRepository.findAll().stream()
+                .sorted(Comparator.comparing(c -> c.getNome()))
+                .map(c -> new CategoriaDto(c.getId(), c.getNome()))
+                .toList();
+    }
+
     @GetMapping
     public List<PecaDto> listar(@RequestParam(required = false) String q) {
         var pecas = (q == null || q.isBlank())
@@ -42,8 +55,17 @@ public class PecaApiController {
         return pecas.stream().map(this::toDto).toList();
     }
 
+    record PecaCreateRequest(String nome, Long categoriaId) {}
     record PecaUpdateRequest(String nome, String codigoOem, String fabricante,
                               Integer intervaloKm, Integer intervaloMeses, String observacoes) {}
+
+    @PostMapping
+    public PecaDto criar(@RequestBody PecaCreateRequest req) {
+        Peca peca = new Peca();
+        peca.setNome(req.nome().trim());
+        peca.setCategoria(categoriaRepository.findById(req.categoriaId()).orElseThrow());
+        return toDto(pecaRepository.save(peca));
+    }
 
     @PutMapping("/{id}")
     public PecaDto update(@PathVariable Long id, @RequestBody PecaUpdateRequest req) {

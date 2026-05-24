@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
-import type { Peca, Troca } from '../types'
+import type { Categoria, Peca, Troca } from '../types'
+import PecaCombobox from '../components/PecaCombobox'
 
 function formatBRL(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -37,6 +38,7 @@ const emptyForm = (): Form => ({
 export default function Servicos() {
   const [servicos, setServicos] = useState<Troca[]>([])
   const [pecas, setPecas] = useState<Peca[]>([])
+  const [categorias, setCategorias] = useState<Categoria[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<Form>(emptyForm())
@@ -45,9 +47,10 @@ export default function Servicos() {
   const [editForm, setEditForm] = useState<Form | null>(null)
 
   useEffect(() => {
-    Promise.all([api.getTrocas('SERVICO'), api.getPecas()]).then(([s, p]) => {
+    Promise.all([api.getTrocas('SERVICO'), api.getPecas(), api.getCategorias()]).then(([s, p, cats]) => {
       setServicos(s as Troca[])
       setPecas(p as Peca[])
+      setCategorias(cats as Categoria[])
       setLoading(false)
     })
   }, [])
@@ -133,12 +136,14 @@ export default function Servicos() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
                 <label className={labelClass}>Peça / sistema *</label>
-                <select name="pecaId" value={form.pecaId} onChange={(e) => handleChange(e, setForm)} required className={inputClass}>
-                  <option value="">Selecione a peça ou sistema...</option>
-                  {pecas.map((p) => (
-                    <option key={p.id} value={p.id}>{p.nome} — {p.categoria.nome}</option>
-                  ))}
-                </select>
+                <PecaCombobox
+                  value={form.pecaId}
+                  onChange={id => setForm(prev => ({ ...prev, pecaId: id }))}
+                  pecas={pecas}
+                  categorias={categorias}
+                  onNovaPeca={p => setPecas(prev => [...prev, p].sort((a, b) => a.nome.localeCompare(b.nome)))}
+                  required
+                />
               </div>
               <div>
                 <label className={labelClass}>Data do serviço *</label>
@@ -232,9 +237,13 @@ export default function Servicos() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     <div className="col-span-2 sm:col-span-3">
                       <label className={labelClass}>Peça</label>
-                      <select name="pecaId" value={editForm!.pecaId} onChange={(e) => handleChange(e, setEditForm as React.Dispatch<React.SetStateAction<Form>>)} className={inputClass}>
-                        {pecas.map((p) => <option key={p.id} value={p.id}>{p.nome} — {p.categoria.nome}</option>)}
-                      </select>
+                      <PecaCombobox
+                        value={editForm!.pecaId}
+                        onChange={id => setEditForm(prev => prev ? { ...prev, pecaId: id } : null)}
+                        pecas={pecas}
+                        categorias={categorias}
+                        onNovaPeca={p => setPecas(prev => [...prev, p].sort((a, b) => a.nome.localeCompare(b.nome)))}
+                      />
                     </div>
                     {([['dataTroca', 'Data', 'date'], ['km', 'KM', 'number'], ['maoDeObra', 'Mão de obra (R$)', 'number'], ['valor', 'Peças (R$)', 'number'], ['fornecedor', 'Oficina', 'text'], ['garantiaMeses', 'Garantia (meses)', 'number'], ['observacoes', 'Observações', 'text']] as [keyof Form, string, string][]).map(([field, label, type]) => (
                       <div key={field}>

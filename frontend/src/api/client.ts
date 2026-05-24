@@ -24,6 +24,9 @@ export const api = {
   deleteTroca: (id: number) => request(`/api/trocas/${id}`, { method: 'DELETE' }),
   getPecas: (q?: string) => request(`/api/pecas${q ? `?q=${encodeURIComponent(q)}` : ''}`),
   getPeca: (id: number) => request(`/api/pecas/${id}`),
+  getCategorias: () => request('/api/pecas/categorias'),
+  createPeca: (body: { nome: string; categoriaId: number }) =>
+    request('/api/pecas', { method: 'POST', body: JSON.stringify(body) }),
   getCarro: () => request('/api/carro'),
   updateCarro: (body: unknown) => request('/api/carro', { method: 'PUT', body: JSON.stringify(body) }),
   updatePeca: (id: number, body: unknown) => request(`/api/pecas/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
