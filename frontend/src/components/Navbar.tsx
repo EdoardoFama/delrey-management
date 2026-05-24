@@ -3,7 +3,8 @@ import DelReyIcon from './DelReyIcon'
 
 const links = [
   { to: '/', label: 'Dashboard' },
-  { to: '/trocas', label: 'Trocas' },
+  { to: '/compras', label: 'Compras' },
+  { to: '/servicos', label: 'Serviços' },
   { to: '/pecas', label: 'Peças' },
   { to: '/carro', label: 'Meu Carro' },
 ]

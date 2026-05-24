@@ -25,6 +25,7 @@ export interface Peca {
 
 export interface Troca {
   id: number
+  tipo: 'COMPRA' | 'SERVICO'
   pecaId: number
   pecaNome: string
   categoriaNome: string

@@ -11,7 +11,7 @@ import java.io.IOException;
 @Controller
 public class SpaController {
 
-    @RequestMapping(value = {"/login", "/carro", "/trocas", "/trocas/**", "/pecas", "/pecas/**"})
+    @RequestMapping(value = {"/login", "/carro", "/compras", "/servicos", "/pecas", "/pecas/**"})
     public void forwardToSpa(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         request.getRequestDispatcher("/index.html").forward(request, response);
     }

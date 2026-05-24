@@ -11,6 +11,8 @@ public interface TrocaRepository extends JpaRepository<Troca, Long> {
 
     List<Troca> findAllByOrderByDataTrocaDesc();
 
+    List<Troca> findByTipoOrderByDataTrocaDesc(String tipo);
+
     List<Troca> findTop5ByOrderByDataTrocaDesc();
 
     @Query("select coalesce(sum(t.valor),0) + coalesce(sum(t.maoDeObra),0) from Troca t where t.dataTroca between :inicio and :fim")

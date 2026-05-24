@@ -19,7 +19,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
 export const api = {
   getDashboard: () => request('/api/dashboard'),
-  getTrocas: () => request('/api/trocas'),
+  getTrocas: (tipo?: string) => request(`/api/trocas${tipo ? `?tipo=${tipo}` : ''}`),
   createTroca: (body: unknown) => request('/api/trocas', { method: 'POST', body: JSON.stringify(body) }),
   deleteTroca: (id: number) => request(`/api/trocas/${id}`, { method: 'DELETE' }),
   getPecas: (q?: string) => request(`/api/pecas${q ? `?q=${encodeURIComponent(q)}` : ''}`),

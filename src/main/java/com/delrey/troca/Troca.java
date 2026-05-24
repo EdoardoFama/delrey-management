@@ -26,6 +26,9 @@ public class Troca {
     @JoinColumn(name = "peca_id")
     private Peca peca;
 
+    @Column(nullable = false, length = 10)
+    private String tipo = "SERVICO";
+
     @Column(name = "data_troca", nullable = false)
     private LocalDate dataTroca;
 

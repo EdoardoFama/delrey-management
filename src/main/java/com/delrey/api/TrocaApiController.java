@@ -25,22 +25,26 @@ public class TrocaApiController {
         this.carroRepository = carroRepository;
     }
 
-    record TrocaDto(Long id, Long pecaId, String pecaNome, String categoriaNome, LocalDate dataTroca,
-                    Integer km, BigDecimal valor, BigDecimal maoDeObra, String fornecedor,
-                    Integer garantiaMeses, String observacoes) {}
+    record TrocaDto(Long id, String tipo, Long pecaId, String pecaNome, String categoriaNome,
+                    LocalDate dataTroca, Integer km, BigDecimal valor, BigDecimal maoDeObra,
+                    String fornecedor, Integer garantiaMeses, String observacoes) {}
 
-    record TrocaRequest(Long pecaId, LocalDate dataTroca, Integer km, BigDecimal valor,
-                        BigDecimal maoDeObra, String fornecedor, Integer garantiaMeses, String observacoes) {}
+    record TrocaRequest(String tipo, Long pecaId, LocalDate dataTroca, Integer km,
+                        BigDecimal valor, BigDecimal maoDeObra, String fornecedor,
+                        Integer garantiaMeses, String observacoes) {}
 
     private TrocaDto toDto(Troca t) {
-        return new TrocaDto(t.getId(), t.getPeca().getId(), t.getPeca().getNome(),
+        return new TrocaDto(t.getId(), t.getTipo(), t.getPeca().getId(), t.getPeca().getNome(),
                 t.getPeca().getCategoria().getNome(), t.getDataTroca(), t.getKm(),
                 t.getValor(), t.getMaoDeObra(), t.getFornecedor(), t.getGarantiaMeses(), t.getObservacoes());
     }
 
     @GetMapping
-    public List<TrocaDto> listar() {
-        return trocaRepository.findAllByOrderByDataTrocaDesc().stream().map(this::toDto).toList();
+    public List<TrocaDto> listar(@RequestParam(required = false) String tipo) {
+        var lista = tipo != null
+                ? trocaRepository.findByTipoOrderByDataTrocaDesc(tipo)
+                : trocaRepository.findAllByOrderByDataTrocaDesc();
+        return lista.stream().map(this::toDto).toList();
     }
 
     @PostMapping
@@ -48,6 +52,7 @@ public class TrocaApiController {
         Troca troca = new Troca();
         troca.setCarro(carroRepository.findAll().get(0));
         troca.setPeca(pecaRepository.findById(req.pecaId()).orElseThrow());
+        troca.setTipo(req.tipo() != null ? req.tipo() : "SERVICO");
         troca.setDataTroca(req.dataTroca() != null ? req.dataTroca() : LocalDate.now());
         troca.setKm(req.km());
         troca.setValor(req.valor() != null ? req.valor() : BigDecimal.ZERO);
