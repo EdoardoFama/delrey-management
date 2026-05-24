@@ -27,7 +27,18 @@ public class DashboardApiController {
     record CarroDto(Long id, String modelo, Integer ano, String motor, String versao, Integer kmAtual) {}
     record TrocaSummary(Long id, String pecaNome, String categoriaNome, LocalDate dataTroca, BigDecimal valor, BigDecimal maoDeObra, Integer km) {}
     record CategoriaTotal(String categoria, BigDecimal total) {}
-    record DashboardResponse(CarroDto carro, BigDecimal totalAno, BigDecimal totalMes, int ano, List<TrocaSummary> ultimasTrocas, List<CategoriaTotal> porCategoria) {}
+    record DashboardResponse(
+            CarroDto carro,
+            BigDecimal totalAno,
+            BigDecimal totalCompras,
+            BigDecimal totalServicos,
+            BigDecimal totalMes,
+            int ano,
+            List<TrocaSummary> ultimasTrocas,
+            List<CategoriaTotal> porCategoria,
+            List<CategoriaTotal> porCategoriaCompras,
+            List<CategoriaTotal> porCategoriaServicos
+    ) {}
 
     @GetMapping
     public DashboardResponse get() {
@@ -36,8 +47,10 @@ public class DashboardApiController {
         LocalDate fimAno = LocalDate.of(ano, 12, 31);
         LocalDate inicioMes = LocalDate.now().withDayOfMonth(1);
 
-        BigDecimal totalAno = trocaRepository.totalGastoNoPeriodo(inicioAno, fimAno);
-        BigDecimal totalMes = trocaRepository.totalGastoNoPeriodo(inicioMes, LocalDate.now());
+        BigDecimal totalAno = nz(trocaRepository.totalGastoNoPeriodo(inicioAno, fimAno));
+        BigDecimal totalCompras = nz(trocaRepository.totalGastoNoPeriodoPorTipo(inicioAno, fimAno, "COMPRA"));
+        BigDecimal totalServicos = nz(trocaRepository.totalGastoNoPeriodoPorTipo(inicioAno, fimAno, "SERVICO"));
+        BigDecimal totalMes = nz(trocaRepository.totalGastoNoPeriodo(inicioMes, LocalDate.now()));
 
         Carro carro = carroRepository.findAll().stream().findFirst().orElse(null);
         CarroDto carroDto = carro == null ? null
@@ -52,13 +65,27 @@ public class DashboardApiController {
                 .map(row -> new CategoriaTotal((String) row[0], (BigDecimal) row[1]))
                 .toList();
 
+        List<CategoriaTotal> porCategoriaCompras = trocaRepository.totalPorCategoriaNoAnoPorTipo(ano, "COMPRA").stream()
+                .map(row -> new CategoriaTotal((String) row[0], (BigDecimal) row[1]))
+                .toList();
+
+        List<CategoriaTotal> porCategoriaServicos = trocaRepository.totalPorCategoriaNoAnoPorTipo(ano, "SERVICO").stream()
+                .map(row -> new CategoriaTotal((String) row[0], (BigDecimal) row[1]))
+                .toList();
+
         return new DashboardResponse(
                 carroDto,
-                totalAno != null ? totalAno : BigDecimal.ZERO,
-                totalMes != null ? totalMes : BigDecimal.ZERO,
+                totalAno,
+                totalCompras,
+                totalServicos,
+                totalMes,
                 ano,
                 ultimasTrocas,
-                porCategoria
+                porCategoria,
+                porCategoriaCompras,
+                porCategoriaServicos
         );
     }
+
+    private static BigDecimal nz(BigDecimal v) { return v != null ? v : BigDecimal.ZERO; }
 }

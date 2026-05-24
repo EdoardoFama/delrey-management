@@ -18,6 +18,18 @@ public interface TrocaRepository extends JpaRepository<Troca, Long> {
     @Query("select coalesce(sum(t.valor),0) + coalesce(sum(t.maoDeObra),0) from Troca t where t.dataTroca between :inicio and :fim")
     BigDecimal totalGastoNoPeriodo(LocalDate inicio, LocalDate fim);
 
+    @Query("select coalesce(sum(t.valor),0) + coalesce(sum(t.maoDeObra),0) from Troca t where t.dataTroca between :inicio and :fim and t.tipo = :tipo")
+    BigDecimal totalGastoNoPeriodoPorTipo(LocalDate inicio, LocalDate fim, String tipo);
+
+    @Query("""
+        select t.peca.categoria.nome as categoria, coalesce(sum(t.valor),0) + coalesce(sum(t.maoDeObra),0) as total
+        from Troca t
+        where year(t.dataTroca) = :ano and t.tipo = :tipo
+        group by t.peca.categoria.nome
+        order by total desc
+    """)
+    List<Object[]> totalPorCategoriaNoAnoPorTipo(int ano, String tipo);
+
     @Query("""
         select t from Troca t
         where t.peca.id = :pecaId

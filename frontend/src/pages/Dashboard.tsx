@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import type { DashboardData } from '../types'
+import DonutChart from '../components/DonutChart'
 
 function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -25,8 +26,6 @@ export default function Dashboard() {
   if (loading) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
   if (!data) return null
 
-  const totalTroca = data.totalAno
-
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -40,55 +39,87 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-6">
-          <p className="text-sm text-gray-400 mb-1">Gasto em {data.ano}</p>
-          <p className="text-3xl font-bold text-purple-400">{formatBRL(totalTroca)}</p>
+      {/* Cards de resumo: Compras, Serviços, Total, Mês */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-2 h-2 rounded-full bg-purple-400" />
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Compras {data.ano}</p>
+          </div>
+          <p className="text-2xl font-bold text-white">{formatBRL(data.totalCompras)}</p>
+          <p className="text-xs text-gray-500 mt-1">Peças adquiridas</p>
         </div>
-        <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-6">
-          <p className="text-sm text-gray-400 mb-1">Gasto este mês</p>
-          <p className="text-3xl font-bold text-purple-400">{formatBRL(data.totalMes)}</p>
+
+        <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-2 h-2 rounded-full bg-pink-400" />
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Serviços {data.ano}</p>
+          </div>
+          <p className="text-2xl font-bold text-white">{formatBRL(data.totalServicos)}</p>
+          <p className="text-xs text-gray-500 mt-1">Mão de obra + peças</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-purple-700/30 to-purple-900/30 border border-purple-500/40 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-purple-300 font-bold">+</span>
+            <p className="text-xs text-purple-200 uppercase tracking-wider">Total {data.ano}</p>
+          </div>
+          <p className="text-2xl font-bold text-purple-300">{formatBRL(data.totalAno)}</p>
+          <p className="text-xs text-purple-300/60 mt-1">Compras + Serviços</p>
+        </div>
+
+        <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-2 h-2 rounded-full bg-gray-500" />
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Este mês</p>
+          </div>
+          <p className="text-2xl font-bold text-white">{formatBRL(data.totalMes)}</p>
+          <p className="text-xs text-gray-500 mt-1">Gasto recente</p>
         </div>
       </div>
 
-      {/* Por categoria */}
-      {data.porCategoria.length > 0 && (
+      {/* Gráficos de rosca */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Gastos por categoria em {data.ano}</h2>
-          <div className="space-y-3">
-            {data.porCategoria.map((c) => {
-              const pct = totalTroca > 0 ? (c.total / totalTroca) * 100 : 0
-              return (
-                <div key={c.categoria}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-300">{c.categoria}</span>
-                    <span className="text-purple-400 font-medium">{formatBRL(c.total)}</span>
-                  </div>
-                  <div className="h-2 bg-purple-900/30 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full transition-all"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <h2 className="text-sm font-semibold text-purple-400 mb-4 uppercase tracking-wider">
+            Compras por categoria
+          </h2>
+          <DonutChart
+            data={data.porCategoriaCompras.map(c => ({ label: c.categoria, value: c.total }))}
+            centerLabel="Compras"
+            centerValue={formatBRL(data.totalCompras)}
+          />
         </div>
-      )}
+
+        <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-6">
+          <h2 className="text-sm font-semibold text-pink-400 mb-4 uppercase tracking-wider">
+            Serviços por categoria
+          </h2>
+          <DonutChart
+            data={data.porCategoriaServicos.map(c => ({ label: c.categoria, value: c.total }))}
+            centerLabel="Serviços"
+            centerValue={formatBRL(data.totalServicos)}
+            colors={['#ec4899', '#f472b6', '#a855f7', '#6366f1', '#f43f5e', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#3b82f6']}
+          />
+        </div>
+      </div>
 
       {/* Últimas trocas */}
       <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white">Últimas trocas</h2>
-          <Link to="/trocas" className="text-sm text-purple-400 hover:text-purple-300 transition-colors">
-            Ver todas →
-          </Link>
+          <h2 className="text-lg font-semibold text-white">Últimos registros</h2>
+          <div className="flex gap-3 text-sm">
+            <Link to="/compras" className="text-purple-400 hover:text-purple-300 transition-colors">
+              Compras →
+            </Link>
+            <Link to="/servicos" className="text-pink-400 hover:text-pink-300 transition-colors">
+              Serviços →
+            </Link>
+          </div>
         </div>
 
         {data.ultimasTrocas.length === 0 ? (
-          <p className="text-gray-500 text-sm">Nenhuma troca registrada ainda.</p>
+          <p className="text-gray-500 text-sm">Nenhum registro ainda.</p>
         ) : (
           <div className="space-y-3">
             {data.ultimasTrocas.map((t) => (
@@ -99,10 +130,13 @@ export default function Dashboard() {
                 <div>
                   <p className="text-white font-medium">{t.pecaNome}</p>
                   <p className="text-gray-500 text-sm">
-                    {t.categoriaNome} · {formatDate(t.dataTroca)} · {t.km?.toLocaleString('pt-BR')} km
+                    {t.categoriaNome} · {formatDate(t.dataTroca)}
+                    {t.km ? ` · ${t.km.toLocaleString('pt-BR')} km` : ''}
                   </p>
                 </div>
-                <span className="text-purple-400 font-semibold">{formatBRL(t.valor)}</span>
+                <span className="text-purple-400 font-semibold">
+                  {formatBRL((t.valor || 0) + (t.maoDeObra || 0))}
+                </span>
               </div>
             ))}
           </div>
