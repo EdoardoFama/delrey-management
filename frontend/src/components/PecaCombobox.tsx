@@ -8,12 +8,11 @@ interface Props {
   pecas: Peca[]
   categorias: Categoria[]
   onNovaPeca: (peca: Peca) => void
-  required?: boolean
 }
 
 const inputCls = 'w-full bg-[#0a0a12] border border-purple-900/40 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 transition-colors'
 
-export default function PecaCombobox({ value, onChange, pecas, categorias, onNovaPeca, required }: Props) {
+export default function PecaCombobox({ value, onChange, pecas, categorias, onNovaPeca }: Props) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
@@ -21,6 +20,7 @@ export default function PecaCombobox({ value, onChange, pecas, categorias, onNov
   const [newCatId, setNewCatId] = useState('')
   const [saving, setSaving] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const selected = pecas.find(p => String(p.id) === value)
 
@@ -29,17 +29,28 @@ export default function PecaCombobox({ value, onChange, pecas, categorias, onNov
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false)
         setCreating(false)
+        setSearch('')
       }
     }
     document.addEventListener('mousedown', onDown)
     return () => document.removeEventListener('mousedown', onDown)
   }, [])
 
+  useEffect(() => {
+    if (open && !creating) inputRef.current?.focus()
+  }, [open, creating])
+
   const filtered = search.trim()
     ? pecas.filter(p =>
         p.nome.toLowerCase().includes(search.toLowerCase()) ||
         p.categoria.nome.toLowerCase().includes(search.toLowerCase()))
     : pecas
+
+  function openSearch() {
+    setSearch('')
+    setOpen(true)
+    setCreating(false)
+  }
 
   function selectPeca(p: Peca) {
     onChange(String(p.id))
@@ -62,11 +73,15 @@ export default function PecaCombobox({ value, onChange, pecas, categorias, onNov
       onNovaPeca(peca)
       onChange(String(peca.id))
       setCreating(false)
+      setSearch('')
+    } catch {
+      alert('Erro ao criar peça. Tente novamente.')
     } finally {
       setSaving(false)
     }
   }
 
+  // ── Modo criação ────────────────────────────────────────────────
   if (creating) {
     return (
       <div ref={containerRef} className="bg-[#0d0d1a] border border-purple-500/40 rounded-lg p-3 space-y-2">
@@ -78,11 +93,7 @@ export default function PecaCombobox({ value, onChange, pecas, categorias, onNov
           placeholder="Nome da peça"
           autoFocus
         />
-        <select
-          className={inputCls}
-          value={newCatId}
-          onChange={e => setNewCatId(e.target.value)}
-        >
+        <select className={inputCls} value={newCatId} onChange={e => setNewCatId(e.target.value)}>
           <option value="">Categorização...</option>
           {categorias.map(c => (
             <option key={c.id} value={c.id}>{c.nome}</option>
@@ -111,14 +122,32 @@ export default function PecaCombobox({ value, onChange, pecas, categorias, onNov
 
   return (
     <div ref={containerRef} className="relative">
-      <input
-        className={inputCls}
-        value={open ? search : (selected ? `${selected.nome} — ${selected.categoria.nome}` : '')}
-        onChange={e => { setSearch(e.target.value); setOpen(true) }}
-        onFocus={() => { setSearch(''); setOpen(true) }}
-        placeholder="Buscar ou criar peça..."
-        required={required && !value}
-      />
+
+      {/* ── Peça selecionada (fechado) ── */}
+      {selected && !open ? (
+        <button
+          type="button"
+          onClick={openSearch}
+          className="w-full text-left bg-[#0a0a12] border border-purple-900/40 rounded-lg px-3 py-2 text-sm flex items-center gap-2 hover:border-purple-500/60 transition-colors min-h-[38px]"
+        >
+          <span className="text-white flex-1 truncate">{selected.nome}</span>
+          <span className="text-xs bg-purple-900/40 text-purple-300 px-2 py-0.5 rounded-full shrink-0">
+            {selected.categoria.nome}
+          </span>
+        </button>
+      ) : (
+        /* ── Input de busca ── */
+        <input
+          ref={inputRef}
+          className={inputCls}
+          value={search}
+          onChange={e => { setSearch(e.target.value); setOpen(true) }}
+          onFocus={() => setOpen(true)}
+          placeholder={selected ? `${selected.nome}` : 'Buscar ou criar peça...'}
+        />
+      )}
+
+      {/* ── Dropdown ── */}
       {open && (
         <div className="absolute z-50 w-full mt-1 bg-[#0d0d1a] border border-purple-900/40 rounded-lg shadow-2xl max-h-60 overflow-y-auto">
           {filtered.length === 0 && (
@@ -132,7 +161,9 @@ export default function PecaCombobox({ value, onChange, pecas, categorias, onNov
               className="w-full text-left px-3 py-2 text-sm hover:bg-purple-900/30 transition-colors flex items-center justify-between gap-2"
             >
               <span className="text-white truncate">{p.nome}</span>
-              <span className="text-xs text-gray-500 shrink-0">{p.categoria.nome}</span>
+              <span className="text-xs bg-purple-900/30 text-purple-300 px-2 py-0.5 rounded-full shrink-0">
+                {p.categoria.nome}
+              </span>
             </button>
           ))}
           {search.trim() && (

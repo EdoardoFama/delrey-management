@@ -142,7 +142,6 @@ export default function Servicos() {
                   pecas={pecas}
                   categorias={categorias}
                   onNovaPeca={p => setPecas(prev => [...prev, p].sort((a, b) => a.nome.localeCompare(b.nome)))}
-                  required
                 />
               </div>
               <div>
