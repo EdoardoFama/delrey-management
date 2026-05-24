@@ -42,6 +42,21 @@ public class PecaApiController {
         return pecas.stream().map(this::toDto).toList();
     }
 
+    record PecaUpdateRequest(String nome, String codigoOem, String fabricante,
+                              Integer intervaloKm, Integer intervaloMeses, String observacoes) {}
+
+    @PutMapping("/{id}")
+    public PecaDto update(@PathVariable Long id, @RequestBody PecaUpdateRequest req) {
+        Peca peca = pecaRepository.findById(id).orElseThrow();
+        if (req.nome() != null) peca.setNome(req.nome());
+        if (req.codigoOem() != null) peca.setCodigoOem(req.codigoOem());
+        if (req.fabricante() != null) peca.setFabricante(req.fabricante());
+        if (req.intervaloKm() != null) peca.setIntervaloKm(req.intervaloKm());
+        if (req.intervaloMeses() != null) peca.setIntervaloMeses(req.intervaloMeses());
+        if (req.observacoes() != null) peca.setObservacoes(req.observacoes());
+        return toDto(pecaRepository.save(peca));
+    }
+
     @GetMapping("/{id}")
     public PecaDetalhe detalhe(@PathVariable Long id) {
         Peca peca = pecaRepository.findById(id).orElseThrow();

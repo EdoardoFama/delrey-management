@@ -66,6 +66,20 @@ public class TrocaApiController {
         return toDto(troca);
     }
 
+    @PutMapping("/{id}")
+    public TrocaDto update(@PathVariable Long id, @RequestBody TrocaRequest req) {
+        Troca troca = trocaRepository.findById(id).orElseThrow();
+        if (req.pecaId() != null) troca.setPeca(pecaRepository.findById(req.pecaId()).orElseThrow());
+        if (req.dataTroca() != null) troca.setDataTroca(req.dataTroca());
+        if (req.km() != null) troca.setKm(req.km());
+        if (req.valor() != null) troca.setValor(req.valor());
+        if (req.maoDeObra() != null) troca.setMaoDeObra(req.maoDeObra());
+        troca.setFornecedor(req.fornecedor());
+        troca.setGarantiaMeses(req.garantiaMeses());
+        troca.setObservacoes(req.observacoes());
+        return toDto(trocaRepository.save(troca));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         trocaRepository.deleteById(id);

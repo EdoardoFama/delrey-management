@@ -26,6 +26,8 @@ export const api = {
   getPeca: (id: number) => request(`/api/pecas/${id}`),
   getCarro: () => request('/api/carro'),
   updateCarro: (body: unknown) => request('/api/carro', { method: 'PUT', body: JSON.stringify(body) }),
+  updatePeca: (id: number, body: unknown) => request(`/api/pecas/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  updateTroca: (id: number, body: unknown) => request(`/api/trocas/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   uploadCarroFoto: async (file: File) => {
     const form = new FormData()
     form.append('file', file)
