@@ -10,106 +10,111 @@ interface Props {
   onNovaPeca: (peca: Peca) => void
 }
 
+type Modo = 'fechado' | 'buscando' | 'criando'
+
 const inputCls = 'w-full bg-[#0a0a12] border border-purple-900/40 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 transition-colors'
 
 export default function PecaCombobox({ value, onChange, pecas, categorias, onNovaPeca }: Props) {
-  // currentPeca é a fonte de verdade para o que está exibido — atualizada
-  // na mesma batch das chamadas onChange/setCreating, evitando flash de input vazio.
-  const [currentPeca, setCurrentPeca] = useState<Peca | null>(
+  // Estado local — o display nunca depende de pecas[] vir atualizado das props
+  const [pecaAtual, setPecaAtual] = useState<Peca | null>(
     () => (value ? (pecas.find(p => String(p.id) === value) ?? null) : null)
   )
-  const [open, setOpen] = useState(false)
-  const [search, setSearch] = useState('')
-  const [creating, setCreating] = useState(false)
-  const [newNome, setNewNome] = useState('')
-  const [newCatId, setNewCatId] = useState('')
-  const [saving, setSaving] = useState(false)
+  const [modo, setModo] = useState<Modo>('fechado')
+  const [busca, setBusca] = useState('')
+  const [novoNome, setNovoNome] = useState('')
+  const [novoCatId, setNovoCatId] = useState('')
+  const [salvando, setSalvando] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
 
-  // Sincroniza quando o valor vem de fora (formulário de edição pré-preenchido)
+  // Sincroniza quando o valor vem de fora (formulário de edição abrindo)
   useEffect(() => {
-    if (!value) { setCurrentPeca(null); return }
-    if (currentPeca && String(currentPeca.id) === value) return
+    if (!value) { setPecaAtual(null); return }
+    if (pecaAtual && String(pecaAtual.id) === value) return
     const found = pecas.find(p => String(p.id) === value)
-    if (found) setCurrentPeca(found)
+    if (found) setPecaAtual(found)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, pecas])
 
-  // Fecha ao clicar fora
+  // Fecha popovers ao clicar fora
   useEffect(() => {
-    function onDown(e: MouseEvent) {
+    function handler(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false)
-        setCreating(false)
-        setSearch('')
+        setModo('fechado')
+        setBusca('')
       }
     }
-    document.addEventListener('mousedown', onDown)
-    return () => document.removeEventListener('mousedown', onDown)
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // Foca input quando abre busca
-  useEffect(() => {
-    if (open && !creating) inputRef.current?.focus()
-  }, [open, creating])
-
-  const filtered = search.trim()
+  const filtradas = busca.trim()
     ? pecas.filter(p =>
-        p.nome.toLowerCase().includes(search.toLowerCase()) ||
-        p.categoria.nome.toLowerCase().includes(search.toLowerCase()))
+        p.nome.toLowerCase().includes(busca.toLowerCase()) ||
+        p.categoria.nome.toLowerCase().includes(busca.toLowerCase()))
     : pecas
 
-  function openSearch() {
-    setSearch('')
-    setOpen(true)
+  function abrirBusca() {
+    setBusca('')
+    setModo('buscando')
   }
 
-  function selectPeca(p: Peca) {
-    setCurrentPeca(p)
+  function selecionar(p: Peca) {
+    setPecaAtual(p)
+    setBusca('')
+    setModo('fechado')
     onChange(String(p.id))
-    setSearch('')
-    setOpen(false)
   }
 
-  function startCreating() {
-    setNewNome(search.trim())
-    setNewCatId('')
-    setCreating(true)
-    setOpen(false)
+  function iniciarCriacao() {
+    setNovoNome(busca.trim())
+    setNovoCatId('')
+    setModo('criando')
   }
 
-  async function confirmCreate() {
-    if (!newNome.trim() || !newCatId) return
-    setSaving(true)
+  function cancelarCriacao() {
+    setNovoNome('')
+    setNovoCatId('')
+    setBusca('')
+    setModo('fechado')
+  }
+
+  async function confirmarCriacao() {
+    if (!novoNome.trim() || !novoCatId) return
+    setSalvando(true)
     try {
-      const peca = await api.createPeca({ nome: newNome.trim(), categoriaId: Number(newCatId) }) as Peca
-      // setCurrentPeca na mesma batch que setCreating(false) — garante que o
-      // botão de seleção renderiza direto, sem passar pelo estado de input vazio
-      setCurrentPeca(peca)
+      const peca = await api.createPeca({ nome: novoNome.trim(), categoriaId: Number(novoCatId) }) as Peca
+
+      // CRÍTICO: setar TUDO antes de notificar o parent.
+      // Assim, mesmo que o parent atualize pecas[] depois, nosso display já está pronto.
+      setPecaAtual(peca)
+      setModo('fechado')
+      setBusca('')
+      setNovoNome('')
+      setNovoCatId('')
+
+      // Notifica o parent depois — não importa quando renderizar, pecaAtual já cobre o display
       onChange(String(peca.id))
       onNovaPeca(peca)
-      setCreating(false)
-      setSearch('')
     } catch {
-      alert('Erro ao criar peça. Tente novamente.')
+      alert('Erro ao criar peça. Verifique sua conexão e tente novamente.')
     } finally {
-      setSaving(false)
+      setSalvando(false)
     }
   }
 
-  // ── Modo criação ─────────────────────────────────────────────────────────
-  if (creating) {
+  // ────────── MODO CRIAÇÃO ──────────
+  if (modo === 'criando') {
     return (
       <div ref={containerRef} className="bg-[#0d0d1a] border border-purple-500/40 rounded-lg p-3 space-y-2">
         <p className="text-xs text-purple-400 font-semibold">Nova peça</p>
         <input
           className={inputCls}
-          value={newNome}
-          onChange={e => setNewNome(e.target.value)}
+          value={novoNome}
+          onChange={e => setNovoNome(e.target.value)}
           placeholder="Nome da peça"
           autoFocus
         />
-        <select className={inputCls} value={newCatId} onChange={e => setNewCatId(e.target.value)}>
+        <select className={inputCls} value={novoCatId} onChange={e => setNovoCatId(e.target.value)}>
           <option value="">Categorização...</option>
           {categorias.map(c => (
             <option key={c.id} value={c.id}>{c.nome}</option>
@@ -118,15 +123,15 @@ export default function PecaCombobox({ value, onChange, pecas, categorias, onNov
         <div className="flex gap-2">
           <button
             type="button"
-            disabled={!newNome.trim() || !newCatId || saving}
-            onClick={confirmCreate}
+            disabled={!novoNome.trim() || !novoCatId || salvando}
+            onClick={confirmarCriacao}
             className="bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
           >
-            {saving ? 'Criando...' : 'Criar peça'}
+            {salvando ? 'Criando...' : 'Criar peça'}
           </button>
           <button
             type="button"
-            onClick={() => { setCreating(false); setSearch('') }}
+            onClick={cancelarCriacao}
             className="px-3 py-1.5 rounded-lg border border-gray-700 text-gray-400 hover:text-white text-xs transition-colors"
           >
             Cancelar
@@ -136,45 +141,45 @@ export default function PecaCombobox({ value, onChange, pecas, categorias, onNov
     )
   }
 
-  // ── Modo normal ───────────────────────────────────────────────────────────
-  return (
-    <div ref={containerRef} className="relative">
-
-      {/* Peça selecionada — não usa input, evita onFocus acidental */}
-      {currentPeca && !open ? (
+  // ────────── MODO FECHADO COM PEÇA SELECIONADA ──────────
+  if (modo === 'fechado' && pecaAtual) {
+    return (
+      <div ref={containerRef} className="relative">
         <button
           type="button"
-          onClick={openSearch}
+          onClick={abrirBusca}
           className="w-full text-left bg-[#0a0a12] border border-purple-900/40 rounded-lg px-3 py-2 text-sm flex items-center gap-2 hover:border-purple-500/60 transition-colors min-h-[38px]"
         >
-          <span className="text-white flex-1 truncate">{currentPeca.nome}</span>
+          <span className="text-white flex-1 truncate">{pecaAtual.nome}</span>
           <span className="text-xs bg-purple-900/40 text-purple-300 px-2 py-0.5 rounded-full shrink-0">
-            {currentPeca.categoria.nome}
+            {pecaAtual.categoria.nome}
           </span>
         </button>
-      ) : (
-        /* Busca */
-        <input
-          ref={inputRef}
-          className={inputCls}
-          value={search}
-          onChange={e => { setSearch(e.target.value); setOpen(true) }}
-          onFocus={() => setOpen(true)}
-          placeholder="Buscar ou criar peça..."
-        />
-      )}
+      </div>
+    )
+  }
 
-      {/* Dropdown */}
-      {open && (
+  // ────────── MODO BUSCANDO (ou fechado sem peça) ──────────
+  return (
+    <div ref={containerRef} className="relative">
+      <input
+        className={inputCls}
+        value={busca}
+        onChange={e => { setBusca(e.target.value); setModo('buscando') }}
+        onFocus={() => setModo('buscando')}
+        placeholder="Buscar ou criar peça..."
+        autoFocus={modo === 'buscando'}
+      />
+      {modo === 'buscando' && (
         <div className="absolute z-50 w-full mt-1 bg-[#0d0d1a] border border-purple-900/40 rounded-lg shadow-2xl max-h-60 overflow-y-auto">
-          {filtered.length === 0 && (
+          {filtradas.length === 0 && (
             <p className="px-3 py-2 text-xs text-gray-500 italic">Nenhuma peça encontrada</p>
           )}
-          {filtered.map(p => (
+          {filtradas.map(p => (
             <button
               key={p.id}
               type="button"
-              onMouseDown={() => selectPeca(p)}
+              onClick={() => selecionar(p)}
               className="w-full text-left px-3 py-2 text-sm hover:bg-purple-900/30 transition-colors flex items-center justify-between gap-2"
             >
               <span className="text-white truncate">{p.nome}</span>
@@ -183,14 +188,14 @@ export default function PecaCombobox({ value, onChange, pecas, categorias, onNov
               </span>
             </button>
           ))}
-          {search.trim() && (
+          {busca.trim() && (
             <button
               type="button"
-              onMouseDown={startCreating}
+              onClick={iniciarCriacao}
               className="w-full text-left px-3 py-2 text-sm text-purple-400 hover:bg-purple-900/20 transition-colors border-t border-purple-900/30 flex items-center gap-1.5"
             >
               <span>➕</span>
-              <span>Criar <span className="font-semibold">"{search.trim()}"</span></span>
+              <span>Criar <span className="font-semibold">"{busca.trim()}"</span></span>
             </button>
           )}
         </div>
