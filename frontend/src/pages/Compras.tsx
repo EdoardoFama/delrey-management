@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { api } from '../api/client'
 import type { Categoria, Peca, Troca } from '../types'
 import PecaCombobox from '../components/PecaCombobox'
@@ -41,6 +41,8 @@ export default function Compras() {
   const [saving, setSaving] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editForm, setEditForm] = useState<Form | null>(null)
+  const [filtroCategoria, setFiltroCategoria] = useState('')
+  const [ordenacao, setOrdenacao] = useState('data-desc')
 
   useEffect(() => {
     Promise.all([api.getTrocas('COMPRA'), api.getPecas(), api.getCategorias()]).then(([c, p, cats]) => {
@@ -102,6 +104,25 @@ export default function Compras() {
   }
 
   const totalGasto = compras.reduce((s, c) => s + (c.valor || 0), 0)
+
+  const categoriasNaLista = useMemo(
+    () => [...new Set(compras.map(c => c.categoriaNome))].sort(),
+    [compras]
+  )
+
+  const listaFiltrada = useMemo(() => {
+    let lista = [...compras]
+    if (filtroCategoria) lista = lista.filter(c => c.categoriaNome === filtroCategoria)
+    switch (ordenacao) {
+      case 'data-asc':   lista.sort((a, b) => a.dataTroca.localeCompare(b.dataTroca)); break
+      case 'data-desc':  lista.sort((a, b) => b.dataTroca.localeCompare(a.dataTroca)); break
+      case 'nome-az':    lista.sort((a, b) => a.pecaNome.localeCompare(b.pecaNome));    break
+      case 'nome-za':    lista.sort((a, b) => b.pecaNome.localeCompare(a.pecaNome));    break
+      case 'valor-asc':  lista.sort((a, b) => (a.valor ?? 0) - (b.valor ?? 0));          break
+      case 'valor-desc': lista.sort((a, b) => (b.valor ?? 0) - (a.valor ?? 0));          break
+    }
+    return lista
+  }, [compras, filtroCategoria, ordenacao])
 
   if (loading) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
 
@@ -180,15 +201,60 @@ export default function Compras() {
         </div>
       )}
 
+      {/* Filtros */}
+      {compras.length > 0 && (
+        <div className="flex flex-wrap gap-2 items-center">
+          <select
+            value={filtroCategoria}
+            onChange={e => setFiltroCategoria(e.target.value)}
+            className="bg-[#16162a] border border-purple-900/30 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 transition-colors"
+          >
+            <option value="">Todas as categorias</option>
+            {categoriasNaLista.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+          <select
+            value={ordenacao}
+            onChange={e => setOrdenacao(e.target.value)}
+            className="bg-[#16162a] border border-purple-900/30 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 transition-colors"
+          >
+            <option value="data-desc">Data (recente)</option>
+            <option value="data-asc">Data (mais antiga)</option>
+            <option value="nome-az">Nome A–Z</option>
+            <option value="nome-za">Nome Z–A</option>
+            <option value="valor-desc">Valor (maior)</option>
+            <option value="valor-asc">Valor (menor)</option>
+          </select>
+          {(filtroCategoria || ordenacao !== 'data-desc') && (
+            <button
+              onClick={() => { setFiltroCategoria(''); setOrdenacao('data-desc') }}
+              className="text-xs text-gray-500 hover:text-white px-3 py-2 rounded-lg border border-gray-800 hover:border-gray-600 transition-colors"
+            >
+              Limpar filtros
+            </button>
+          )}
+          {filtroCategoria && (
+            <span className="text-xs text-gray-500 ml-1">
+              {listaFiltrada.length} de {compras.length} itens
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Lista */}
       {compras.length === 0 ? (
         <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-12 text-center">
           <p className="text-4xl mb-3">🔧</p>
           <p className="text-gray-400">Nenhuma compra registrada ainda.</p>
         </div>
+      ) : listaFiltrada.length === 0 ? (
+        <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-8 text-center">
+          <p className="text-gray-400 text-sm">Nenhuma compra nessa categoria.</p>
+        </div>
       ) : (
         <div className="space-y-2">
-          {compras.map((c) => (
+          {listaFiltrada.map((c) => (
             <div key={c.id} className="bg-[#16162a] border border-purple-900/30 rounded-xl overflow-hidden">
               {editingId !== c.id ? (
                 <div className="flex items-center gap-4 px-5 py-4">
