@@ -10,6 +10,8 @@ import Carro from './pages/Carro'
 import Alertas from './pages/Alertas'
 import Garantia from './pages/Garantia'
 import Timeline from './pages/Timeline'
+import Hodometro from './pages/Hodometro'
+import Combustivel from './pages/Combustivel'
 
 function Layout() {
   const { pathname } = useLocation()
@@ -29,6 +31,8 @@ function Layout() {
           <Route path="/alertas" element={<Alertas />} />
           <Route path="/garantia" element={<Garantia />} />
           <Route path="/timeline" element={<Timeline />} />
+          <Route path="/hodometro" element={<Hodometro />} />
+          <Route path="/combustivel" element={<Combustivel />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

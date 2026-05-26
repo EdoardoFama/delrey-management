@@ -6,6 +6,8 @@ const links = [
   { to: '/compras', label: 'Compras' },
   { to: '/servicos', label: 'Serviços' },
   { to: '/pecas', label: 'Peças' },
+  { to: '/combustivel', label: 'Combustível' },
+  { to: '/hodometro', label: 'Hodômetro' },
   { to: '/alertas', label: 'Alertas' },
   { to: '/timeline', label: 'Timeline' },
   { to: '/carro', label: 'Meu Carro' },

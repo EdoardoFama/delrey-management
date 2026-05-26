@@ -89,6 +89,44 @@ export interface AlertaManutencao {
   status: 'ATRASADO' | 'PROXIMO' | 'OK' | 'SEM_REGISTRO'
 }
 
+export interface LeituraKm {
+  id: number
+  data: string
+  km: number
+  observacoes?: string
+}
+
+export interface HodometroResumo {
+  leituras: LeituraKm[]
+  kmAtualCarro: number | null
+  kmPorMesMedio: number | null
+  totalRodadoUltimosMeses: number | null
+  mesesConsiderados: number | null
+}
+
+export interface Abastecimento {
+  id: number
+  data: string
+  km: number | null
+  litros: number
+  valorLitro: number
+  valorTotal: number
+  tipoCombustivel?: string
+  posto?: string
+  tanqueCheio: boolean
+  observacoes?: string
+  kmPorLitro: number | null
+}
+
+export interface CombustivelResumo {
+  abastecimentos: Abastecimento[]
+  consumoMedio: number
+  gastoTotal: number
+  valorLitroMedio: number
+  totalLitros: number
+  totalKm: number | null
+}
+
 export interface GarantiaAtiva {
   trocaId: number
   pecaNome: string
