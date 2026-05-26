@@ -45,4 +45,25 @@ public interface TrocaRepository extends JpaRepository<Troca, Long> {
         order by total desc
     """)
     List<Object[]> totalPorCategoriaNoAno(int ano);
+
+    @Query("""
+        select t.peca.categoria.nome as categoria, coalesce(sum(t.valor),0) + coalesce(sum(t.maoDeObra),0) as total
+        from Troca t
+        where t.dataTroca between :inicio and :fim
+        group by t.peca.categoria.nome
+        order by total desc
+    """)
+    List<Object[]> totalPorCategoriaNoPeriodo(LocalDate inicio, LocalDate fim);
+
+    @Query("""
+        select t.peca.categoria.nome as categoria, coalesce(sum(t.valor),0) + coalesce(sum(t.maoDeObra),0) as total
+        from Troca t
+        where t.dataTroca between :inicio and :fim and t.tipo = :tipo
+        group by t.peca.categoria.nome
+        order by total desc
+    """)
+    List<Object[]> totalPorCategoriaNoPeriodoPorTipo(LocalDate inicio, LocalDate fim, String tipo);
+
+    @Query("select distinct year(t.dataTroca) from Troca t order by year(t.dataTroca) desc")
+    List<Integer> anosComRegistros();
 }

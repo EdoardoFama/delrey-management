@@ -18,7 +18,13 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  getDashboard: () => request('/api/dashboard'),
+  getDashboard: (ano?: number, mes?: number | null) => {
+    const params = new URLSearchParams()
+    if (ano != null) params.set('ano', String(ano))
+    if (mes != null) params.set('mes', String(mes))
+    const qs = params.toString()
+    return request(`/api/dashboard${qs ? `?${qs}` : ''}`)
+  },
   getTrocas: (tipo?: string) => request(`/api/trocas${tipo ? `?tipo=${tipo}` : ''}`),
   createTroca: (body: unknown) => request('/api/trocas', { method: 'POST', body: JSON.stringify(body) }),
   deleteTroca: (id: number) => request(`/api/trocas/${id}`, { method: 'DELETE' }),

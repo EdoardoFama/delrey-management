@@ -5,6 +5,7 @@ import com.delrey.carro.CarroRepository;
 import com.delrey.troca.TrocaRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
@@ -29,28 +30,37 @@ public class DashboardApiController {
     record CategoriaTotal(String categoria, BigDecimal total) {}
     record DashboardResponse(
             CarroDto carro,
-            BigDecimal totalAno,
+            int ano,
+            Integer mes,
+            BigDecimal totalPeriodo,
             BigDecimal totalCompras,
             BigDecimal totalServicos,
-            BigDecimal totalMes,
-            int ano,
             List<TrocaSummary> ultimasTrocas,
             List<CategoriaTotal> porCategoria,
             List<CategoriaTotal> porCategoriaCompras,
-            List<CategoriaTotal> porCategoriaServicos
+            List<CategoriaTotal> porCategoriaServicos,
+            List<Integer> anosDisponiveis
     ) {}
 
     @GetMapping
-    public DashboardResponse get() {
-        int ano = Year.now().getValue();
-        LocalDate inicioAno = LocalDate.of(ano, 1, 1);
-        LocalDate fimAno = LocalDate.of(ano, 12, 31);
-        LocalDate inicioMes = LocalDate.now().withDayOfMonth(1);
+    public DashboardResponse get(
+            @RequestParam(required = false) Integer ano,
+            @RequestParam(required = false) Integer mes
+    ) {
+        int anoFiltro = ano != null ? ano : Year.now().getValue();
+        LocalDate inicio;
+        LocalDate fim;
+        if (mes != null && mes >= 1 && mes <= 12) {
+            inicio = LocalDate.of(anoFiltro, mes, 1);
+            fim = inicio.withDayOfMonth(inicio.lengthOfMonth());
+        } else {
+            inicio = LocalDate.of(anoFiltro, 1, 1);
+            fim = LocalDate.of(anoFiltro, 12, 31);
+        }
 
-        BigDecimal totalAno = nz(trocaRepository.totalGastoNoPeriodo(inicioAno, fimAno));
-        BigDecimal totalCompras = nz(trocaRepository.totalGastoNoPeriodoPorTipo(inicioAno, fimAno, "COMPRA"));
-        BigDecimal totalServicos = nz(trocaRepository.totalGastoNoPeriodoPorTipo(inicioAno, fimAno, "SERVICO"));
-        BigDecimal totalMes = nz(trocaRepository.totalGastoNoPeriodo(inicioMes, LocalDate.now()));
+        BigDecimal totalPeriodo = nz(trocaRepository.totalGastoNoPeriodo(inicio, fim));
+        BigDecimal totalCompras = nz(trocaRepository.totalGastoNoPeriodoPorTipo(inicio, fim, "COMPRA"));
+        BigDecimal totalServicos = nz(trocaRepository.totalGastoNoPeriodoPorTipo(inicio, fim, "SERVICO"));
 
         Carro carro = carroRepository.findAll().stream().findFirst().orElse(null);
         CarroDto carroDto = carro == null ? null
@@ -61,29 +71,35 @@ public class DashboardApiController {
                         t.getDataTroca(), t.getValor(), t.getMaoDeObra(), t.getKm()))
                 .toList();
 
-        List<CategoriaTotal> porCategoria = trocaRepository.totalPorCategoriaNoAno(ano).stream()
+        List<CategoriaTotal> porCategoria = trocaRepository.totalPorCategoriaNoPeriodo(inicio, fim).stream()
                 .map(row -> new CategoriaTotal((String) row[0], (BigDecimal) row[1]))
                 .toList();
 
-        List<CategoriaTotal> porCategoriaCompras = trocaRepository.totalPorCategoriaNoAnoPorTipo(ano, "COMPRA").stream()
+        List<CategoriaTotal> porCategoriaCompras = trocaRepository.totalPorCategoriaNoPeriodoPorTipo(inicio, fim, "COMPRA").stream()
                 .map(row -> new CategoriaTotal((String) row[0], (BigDecimal) row[1]))
                 .toList();
 
-        List<CategoriaTotal> porCategoriaServicos = trocaRepository.totalPorCategoriaNoAnoPorTipo(ano, "SERVICO").stream()
+        List<CategoriaTotal> porCategoriaServicos = trocaRepository.totalPorCategoriaNoPeriodoPorTipo(inicio, fim, "SERVICO").stream()
                 .map(row -> new CategoriaTotal((String) row[0], (BigDecimal) row[1]))
                 .toList();
+
+        List<Integer> anosDisponiveis = trocaRepository.anosComRegistros();
+        if (anosDisponiveis.isEmpty()) {
+            anosDisponiveis = List.of(Year.now().getValue());
+        }
 
         return new DashboardResponse(
                 carroDto,
-                totalAno,
+                anoFiltro,
+                mes,
+                totalPeriodo,
                 totalCompras,
                 totalServicos,
-                totalMes,
-                ano,
                 ultimasTrocas,
                 porCategoria,
                 porCategoriaCompras,
-                porCategoriaServicos
+                porCategoriaServicos,
+                anosDisponiveis
         );
     }
 

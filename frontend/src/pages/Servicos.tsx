@@ -47,6 +47,8 @@ export default function Servicos() {
   const [editForm, setEditForm] = useState<Form | null>(null)
   const [filtroCategoria, setFiltroCategoria] = useState('')
   const [ordenacao, setOrdenacao] = useState('data-desc')
+  const [filtroAno, setFiltroAno] = useState<string>('')
+  const [filtroMes, setFiltroMes] = useState<string>('')
 
   useEffect(() => {
     Promise.all([api.getTrocas('SERVICO'), api.getPecas(), api.getCategorias()]).then(([s, p, cats]) => {
@@ -117,9 +119,16 @@ export default function Servicos() {
     [servicos]
   )
 
+  const anosDisponiveis = useMemo(
+    () => [...new Set(servicos.map(s => s.dataTroca.slice(0, 4)))].sort().reverse(),
+    [servicos]
+  )
+
   const listaFiltrada = useMemo(() => {
     let lista = [...servicos]
     if (filtroCategoria) lista = lista.filter(s => s.categoriaNome === filtroCategoria)
+    if (filtroAno) lista = lista.filter(s => s.dataTroca.startsWith(filtroAno))
+    if (filtroMes) lista = lista.filter(s => s.dataTroca.slice(5, 7) === filtroMes.padStart(2, '0'))
     switch (ordenacao) {
       case 'data-asc':   lista.sort((a, b) => a.dataTroca.localeCompare(b.dataTroca));                            break
       case 'data-desc':  lista.sort((a, b) => b.dataTroca.localeCompare(a.dataTroca));                            break
@@ -129,7 +138,7 @@ export default function Servicos() {
       case 'valor-desc': lista.sort((a, b) => ((b.valor ?? 0) + (b.maoDeObra ?? 0)) - ((a.valor ?? 0) + (a.maoDeObra ?? 0))); break
     }
     return lista
-  }, [servicos, filtroCategoria, ordenacao])
+  }, [servicos, filtroCategoria, filtroAno, filtroMes, ordenacao])
 
   if (loading) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
 
@@ -224,6 +233,26 @@ export default function Servicos() {
       {servicos.length > 0 && (
         <div className="flex flex-wrap gap-2 items-center">
           <select
+            value={filtroAno}
+            onChange={e => setFiltroAno(e.target.value)}
+            className="bg-[#16162a] border border-purple-900/30 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 transition-colors"
+          >
+            <option value="">Todos os anos</option>
+            {anosDisponiveis.map(a => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
+          <select
+            value={filtroMes}
+            onChange={e => setFiltroMes(e.target.value)}
+            className="bg-[#16162a] border border-purple-900/30 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 transition-colors"
+          >
+            <option value="">Todos os meses</option>
+            {['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map((m, i) => (
+              <option key={i + 1} value={String(i + 1)}>{m}</option>
+            ))}
+          </select>
+          <select
             value={filtroCategoria}
             onChange={e => setFiltroCategoria(e.target.value)}
             className="bg-[#16162a] border border-purple-900/30 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 transition-colors"
@@ -245,15 +274,15 @@ export default function Servicos() {
             <option value="valor-desc">Valor total (maior)</option>
             <option value="valor-asc">Valor total (menor)</option>
           </select>
-          {(filtroCategoria || ordenacao !== 'data-desc') && (
+          {(filtroCategoria || filtroAno || filtroMes || ordenacao !== 'data-desc') && (
             <button
-              onClick={() => { setFiltroCategoria(''); setOrdenacao('data-desc') }}
+              onClick={() => { setFiltroCategoria(''); setFiltroAno(''); setFiltroMes(''); setOrdenacao('data-desc') }}
               className="text-xs text-gray-500 hover:text-white px-3 py-2 rounded-lg border border-gray-800 hover:border-gray-600 transition-colors"
             >
               Limpar filtros
             </button>
           )}
-          {filtroCategoria && (
+          {(filtroCategoria || filtroAno || filtroMes) && (
             <span className="text-xs text-gray-500 ml-1">
               {listaFiltrada.length} de {servicos.length} itens
             </span>

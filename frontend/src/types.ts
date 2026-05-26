@@ -45,15 +45,16 @@ export interface CategoriaTotal {
 
 export interface DashboardData {
   carro: Carro
-  totalAno: number
+  ano: number
+  mes: number | null
+  totalPeriodo: number
   totalCompras: number
   totalServicos: number
-  totalMes: number
-  ano: number
   ultimasTrocas: Troca[]
   porCategoria: CategoriaTotal[]
   porCategoriaCompras: CategoriaTotal[]
   porCategoriaServicos: CategoriaTotal[]
+  anosDisponiveis: number[]
 }
 
 export interface PecaDetalhe {
