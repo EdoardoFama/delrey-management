@@ -28,6 +28,8 @@ public class DashboardApiController {
     record CarroDto(Long id, String modelo, Integer ano, String motor, String versao, Integer kmAtual) {}
     record TrocaSummary(Long id, String pecaNome, String categoriaNome, LocalDate dataTroca, BigDecimal valor, BigDecimal maoDeObra, Integer km) {}
     record CategoriaTotal(String categoria, BigDecimal total) {}
+    record FornecedorTotal(String fornecedor, BigDecimal total, Long quantidade) {}
+    record CustoPorKm(BigDecimal custo, Integer kmRodados) {}
     record DashboardResponse(
             CarroDto carro,
             int ano,
@@ -39,7 +41,9 @@ public class DashboardApiController {
             List<CategoriaTotal> porCategoria,
             List<CategoriaTotal> porCategoriaCompras,
             List<CategoriaTotal> porCategoriaServicos,
-            List<Integer> anosDisponiveis
+            List<Integer> anosDisponiveis,
+            List<FornecedorTotal> rankingFornecedores,
+            CustoPorKm custoPorKm
     ) {}
 
     @GetMapping
@@ -88,6 +92,19 @@ public class DashboardApiController {
             anosDisponiveis = List.of(Year.now().getValue());
         }
 
+        List<FornecedorTotal> rankingFornecedores = trocaRepository.rankingFornecedoresNoPeriodo(inicio, fim).stream()
+                .limit(5)
+                .map(row -> new FornecedorTotal((String) row[0], (BigDecimal) row[1], ((Number) row[2]).longValue()))
+                .toList();
+
+        Integer kmMin = trocaRepository.kmMinNoPeriodo(inicio, fim);
+        Integer kmMax = trocaRepository.kmMaxNoPeriodo(inicio, fim);
+        Integer kmRodados = (kmMin != null && kmMax != null && kmMax > kmMin) ? kmMax - kmMin : null;
+        BigDecimal custoKm = (kmRodados != null && kmRodados > 0)
+                ? totalPeriodo.divide(BigDecimal.valueOf(kmRodados), 2, java.math.RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+        CustoPorKm custoPorKm = new CustoPorKm(custoKm, kmRodados);
+
         return new DashboardResponse(
                 carroDto,
                 anoFiltro,
@@ -99,7 +116,9 @@ public class DashboardApiController {
                 porCategoria,
                 porCategoriaCompras,
                 porCategoriaServicos,
-                anosDisponiveis
+                anosDisponiveis,
+                rankingFornecedores,
+                custoPorKm
         );
     }
 

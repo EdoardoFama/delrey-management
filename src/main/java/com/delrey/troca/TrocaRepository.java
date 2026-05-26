@@ -68,4 +68,37 @@ public interface TrocaRepository extends JpaRepository<Troca, Long> {
 
     @Query("select distinct year(t.dataTroca) from Troca t order by year(t.dataTroca) desc")
     List<Integer> anosComRegistros();
+
+    @Query("""
+        select t.fornecedor as fornecedor, coalesce(sum(t.valor),0) + coalesce(sum(t.maoDeObra),0) as total, count(t) as qtd
+        from Troca t
+        where t.fornecedor is not null and t.fornecedor <> ''
+              and t.dataTroca between :inicio and :fim
+        group by t.fornecedor
+        order by total desc
+    """)
+    List<Object[]> rankingFornecedoresNoPeriodo(LocalDate inicio, LocalDate fim);
+
+    @Query("select min(t.km) from Troca t where t.dataTroca between :inicio and :fim and t.km is not null")
+    Integer kmMinNoPeriodo(LocalDate inicio, LocalDate fim);
+
+    @Query("select max(t.km) from Troca t where t.dataTroca between :inicio and :fim and t.km is not null")
+    Integer kmMaxNoPeriodo(LocalDate inicio, LocalDate fim);
+
+    @Query("""
+        select t from Troca t
+        where t.tipo = 'SERVICO' and t.garantiaMeses is not null and t.garantiaMeses > 0
+        order by t.dataTroca desc
+    """)
+    List<Troca> servicosComGarantiaConfigurada();
+
+    @Query(value = """
+        select t.* from troca t
+        where t.id in (
+            select max(t2.id) from troca t2
+            where t2.peca_id = t.peca_id
+            group by t2.peca_id
+        )
+    """, nativeQuery = true)
+    List<Troca> ultimaTrocaDeCadaPeca();
 }

@@ -6,6 +6,8 @@ const links = [
   { to: '/compras', label: 'Compras' },
   { to: '/servicos', label: 'Serviços' },
   { to: '/pecas', label: 'Peças' },
+  { to: '/alertas', label: 'Alertas' },
+  { to: '/timeline', label: 'Timeline' },
   { to: '/carro', label: 'Meu Carro' },
 ]
 
@@ -20,7 +22,7 @@ export default function Navbar() {
           </span>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 flex-wrap">
           {links.map(({ to, label }) => (
             <NavLink
               key={to}

@@ -87,7 +87,7 @@ export default function Dashboard() {
       </div>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">
           <div className="flex items-center gap-2 mb-2">
             <span className="w-2 h-2 rounded-full bg-purple-400" />
@@ -113,6 +113,21 @@ export default function Dashboard() {
           </div>
           <p className="text-2xl font-bold text-purple-300">{formatBRL(data.totalPeriodo)}</p>
           <p className="text-xs text-purple-300/60 mt-1">Compras + Serviços</p>
+        </div>
+
+        <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-2 h-2 rounded-full bg-cyan-400" />
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Custo / km</p>
+          </div>
+          <p className="text-2xl font-bold text-white">
+            {data.custoPorKm.kmRodados ? formatBRL(data.custoPorKm.custo) : '—'}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            {data.custoPorKm.kmRodados
+              ? `${data.custoPorKm.kmRodados.toLocaleString('pt-BR')} km rodados`
+              : 'Sem dados de km'}
+          </p>
         </div>
       </div>
 
@@ -141,6 +156,55 @@ export default function Dashboard() {
           />
         </div>
       </div>
+
+      {/* Atalhos para Alertas e Timeline */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Link to="/alertas" className="bg-[#16162a] border border-amber-700/30 hover:border-amber-500/60 rounded-xl p-5 transition-colors group">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-amber-400">🔔</span>
+            <p className="text-sm font-semibold text-white">Alertas de manutenção</p>
+          </div>
+          <p className="text-xs text-gray-400">Peças com prazo vencendo ou vencido</p>
+          <p className="text-xs text-amber-400/80 mt-2 group-hover:text-amber-300">Ver alertas →</p>
+        </Link>
+
+        <Link to="/garantia" className="bg-[#16162a] border border-emerald-700/30 hover:border-emerald-500/60 rounded-xl p-5 transition-colors group">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-emerald-400">🛡️</span>
+            <p className="text-sm font-semibold text-white">Garantias ativas</p>
+          </div>
+          <p className="text-xs text-gray-400">Serviços ainda dentro do prazo</p>
+          <p className="text-xs text-emerald-400/80 mt-2 group-hover:text-emerald-300">Ver garantias →</p>
+        </Link>
+
+        <Link to="/timeline" className="bg-[#16162a] border border-purple-700/30 hover:border-purple-500/60 rounded-xl p-5 transition-colors group">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-purple-400">📅</span>
+            <p className="text-sm font-semibold text-white">Timeline</p>
+          </div>
+          <p className="text-xs text-gray-400">Histórico cronológico do carro</p>
+          <p className="text-xs text-purple-400/80 mt-2 group-hover:text-purple-300">Ver linha do tempo →</p>
+        </Link>
+      </div>
+
+      {/* Ranking de fornecedores */}
+      {data.rankingFornecedores.length > 0 && (
+        <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-6">
+          <h2 className="text-lg font-semibold text-white mb-4">Top fornecedores · {periodoLabel}</h2>
+          <div className="space-y-2">
+            {data.rankingFornecedores.map((f, i) => (
+              <div key={f.fornecedor} className="flex items-center gap-3">
+                <span className="text-purple-400 font-bold w-6 text-center">{i + 1}º</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm truncate">{f.fornecedor}</p>
+                  <p className="text-xs text-gray-500">{f.quantidade} {f.quantidade === 1 ? 'compra' : 'compras'}</p>
+                </div>
+                <span className="text-purple-300 font-semibold whitespace-nowrap">{formatBRL(f.total)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Últimas trocas */}
       <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-6">

@@ -55,6 +55,51 @@ export interface DashboardData {
   porCategoriaCompras: CategoriaTotal[]
   porCategoriaServicos: CategoriaTotal[]
   anosDisponiveis: number[]
+  rankingFornecedores: FornecedorTotal[]
+  custoPorKm: { custo: number; kmRodados: number | null }
+}
+
+export interface FornecedorTotal {
+  fornecedor: string
+  total: number
+  quantidade: number
+}
+
+export interface Anexo {
+  id: number
+  trocaId: number
+  tipo: string
+  nomeArquivo: string
+  descricao?: string
+  criadoEm: string
+}
+
+export interface AlertaManutencao {
+  pecaId: number
+  pecaNome: string
+  categoriaNome: string
+  intervaloKm: number | null
+  intervaloMeses: number | null
+  ultimaTroca: string | null
+  ultimoKm: number | null
+  proximaPorData: string | null
+  proximoPorKm: number | null
+  diasParaProximo: number | null
+  kmParaProximo: number | null
+  status: 'ATRASADO' | 'PROXIMO' | 'OK' | 'SEM_REGISTRO'
+}
+
+export interface GarantiaAtiva {
+  trocaId: number
+  pecaNome: string
+  categoriaNome: string
+  dataTroca: string
+  garantiaMeses: number
+  validaAte: string
+  diasRestantes: number
+  valor: number
+  maoDeObra?: number
+  fornecedor?: string
 }
 
 export interface PecaDetalhe {

@@ -7,6 +7,9 @@ import Pecas from './pages/Pecas'
 import PecaDetalhe from './pages/PecaDetalhe'
 import Login from './pages/Login'
 import Carro from './pages/Carro'
+import Alertas from './pages/Alertas'
+import Garantia from './pages/Garantia'
+import Timeline from './pages/Timeline'
 
 function Layout() {
   const { pathname } = useLocation()
@@ -23,6 +26,9 @@ function Layout() {
           <Route path="/pecas" element={<Pecas />} />
           <Route path="/pecas/:id" element={<PecaDetalhe />} />
           <Route path="/carro" element={<Carro />} />
+          <Route path="/alertas" element={<Alertas />} />
+          <Route path="/garantia" element={<Garantia />} />
+          <Route path="/timeline" element={<Timeline />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

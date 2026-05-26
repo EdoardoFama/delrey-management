@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { api } from '../api/client'
 import type { Categoria, Peca, Troca } from '../types'
 import PecaCombobox from '../components/PecaCombobox'
+import AnexosList from '../components/AnexosList'
 
 function formatBRL(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -316,6 +317,7 @@ export default function Servicos() {
                       {s.garantiaMeses && <span>✓ {s.garantiaMeses} meses garantia</span>}
                     </div>
                     {s.observacoes && <p className="text-gray-600 text-xs mt-1">{s.observacoes}</p>}
+                    <AnexosList trocaId={s.id} />
                   </div>
                   <div className="text-right whitespace-nowrap">
                     {(s.maoDeObra || 0) > 0 && <p className="text-xs text-gray-500">M.O. {formatBRL(s.maoDeObra!)}</p>}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { api } from '../api/client'
 import type { Categoria, Peca, Troca } from '../types'
 import PecaCombobox from '../components/PecaCombobox'
+import AnexosList from '../components/AnexosList'
 
 function formatBRL(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -296,6 +297,7 @@ export default function Compras() {
                       {c.fornecedor && <span>📍 {c.fornecedor}</span>}
                     </div>
                     {c.observacoes && <p className="text-gray-600 text-xs mt-1">{c.observacoes}</p>}
+                    <AnexosList trocaId={c.id} />
                   </div>
                   <span className="text-purple-400 font-semibold whitespace-nowrap">{formatBRL(c.valor || 0)}</span>
                   <button onClick={() => { setEditingId(c.id); setEditForm({ pecaId: String(c.pecaId), dataTroca: c.dataTroca, km: c.km?.toString() ?? '', valor: c.valor?.toString() ?? '', fornecedor: c.fornecedor ?? '', observacoes: c.observacoes ?? '' }) }}

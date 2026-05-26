@@ -37,6 +37,20 @@ export const api = {
   updateCarro: (body: unknown) => request('/api/carro', { method: 'PUT', body: JSON.stringify(body) }),
   updatePeca: (id: number, body: unknown) => request(`/api/pecas/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   updateTroca: (id: number, body: unknown) => request(`/api/trocas/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  getAlertasManutencao: () => request('/api/alertas/manutencao'),
+  getGarantia: () => request('/api/alertas/garantia'),
+  getAnexos: (trocaId: number) => request(`/api/anexos?trocaId=${trocaId}`),
+  deleteAnexo: (id: number) => request(`/api/anexos/${id}`, { method: 'DELETE' }),
+  uploadAnexo: async (trocaId: number, file: File, descricao?: string) => {
+    const form = new FormData()
+    form.append('file', file)
+    form.append('trocaId', String(trocaId))
+    if (descricao) form.append('descricao', descricao)
+    const res = await fetch('/api/anexos', { method: 'POST', credentials: 'include', body: form })
+    if (res.status === 401) { window.location.href = '/login'; throw new Error('Não autenticado') }
+    if (!res.ok) throw new Error(`Erro ${res.status}`)
+    return res.json()
+  },
   uploadCarroFoto: async (file: File) => {
     const form = new FormData()
     form.append('file', file)
