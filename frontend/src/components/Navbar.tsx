@@ -9,6 +9,7 @@ const links = [
   { to: '/combustivel', label: 'Combustível' },
   { to: '/hodometro', label: 'Hodômetro' },
   { to: '/alertas', label: 'Alertas' },
+  { to: '/projecao', label: 'Projeção' },
   { to: '/timeline', label: 'Timeline' },
   { to: '/carro', label: 'Meu Carro' },
 ]

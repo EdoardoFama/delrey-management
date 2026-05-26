@@ -89,6 +89,37 @@ export interface AlertaManutencao {
   status: 'ATRASADO' | 'PROXIMO' | 'OK' | 'SEM_REGISTRO'
 }
 
+export interface ManutencaoPrevista {
+  pecaId: number
+  pecaNome: string
+  categoriaNome: string
+  previsaoData: string | null
+  previsaoKm: number | null
+  motivo: string
+  custoEstimado: number
+  fonteCusto: string
+}
+
+export interface PeriodoProjetado {
+  meses: number
+  combustivelPrevisto: number
+  kmPrevistos: number | null
+  manutencoesPrevistas: number
+  baselineHistorica: number
+  totalEstimado: number
+  manutencoes: ManutencaoPrevista[]
+}
+
+export interface ProjecaoData {
+  ritmoKmPorMes: number | null
+  consumoMedio: number
+  valorLitroMedio: number
+  mediaMensalHistorica: number
+  mesesHistorico: number
+  kmAtualCarro: number | null
+  periodos: PeriodoProjetado[]
+}
+
 export interface LeituraKm {
   id: number
   data: string

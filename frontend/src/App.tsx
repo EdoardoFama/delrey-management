@@ -12,6 +12,7 @@ import Garantia from './pages/Garantia'
 import Timeline from './pages/Timeline'
 import Hodometro from './pages/Hodometro'
 import Combustivel from './pages/Combustivel'
+import Projecao from './pages/Projecao'
 
 function Layout() {
   const { pathname } = useLocation()
@@ -33,6 +34,7 @@ function Layout() {
           <Route path="/timeline" element={<Timeline />} />
           <Route path="/hodometro" element={<Hodometro />} />
           <Route path="/combustivel" element={<Combustivel />} />
+          <Route path="/projecao" element={<Projecao />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

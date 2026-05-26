@@ -37,6 +37,7 @@ export const api = {
   updateCarro: (body: unknown) => request('/api/carro', { method: 'PUT', body: JSON.stringify(body) }),
   updatePeca: (id: number, body: unknown) => request(`/api/pecas/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   updateTroca: (id: number, body: unknown) => request(`/api/trocas/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  getProjecao: () => request('/api/projecao'),
   getHodometro: () => request('/api/hodometro'),
   createLeituraKm: (body: unknown) => request('/api/hodometro', { method: 'POST', body: JSON.stringify(body) }),
   updateLeituraKm: (id: number, body: unknown) => request(`/api/hodometro/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
