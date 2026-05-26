@@ -66,7 +66,7 @@ public class DashboardApiController {
         CarroDto carroDto = carro == null ? null
                 : new CarroDto(carro.getId(), carro.getModelo(), carro.getAno(), carro.getMotor(), carro.getVersao(), carro.getKmAtual());
 
-        List<TrocaSummary> ultimasTrocas = trocaRepository.findTop5ByOrderByDataTrocaDesc().stream()
+        List<TrocaSummary> ultimasTrocas = trocaRepository.findTop5ByDataTrocaBetweenOrderByDataTrocaDesc(inicio, fim).stream()
                 .map(t -> new TrocaSummary(t.getId(), t.getPeca().getNome(), t.getPeca().getCategoria().getNome(),
                         t.getDataTroca(), t.getValor(), t.getMaoDeObra(), t.getKm()))
                 .toList();
