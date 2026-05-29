@@ -10,7 +10,9 @@ const links = [
   { to: '/hodometro', label: 'Hodômetro' },
   { to: '/alertas', label: 'Alertas' },
   { to: '/projecao', label: 'Projeção' },
+  { to: '/problemas', label: 'Problemas' },
   { to: '/timeline', label: 'Timeline' },
+  { to: '/relatorio', label: 'Dossiê' },
   { to: '/carro', label: 'Meu Carro' },
 ]
 

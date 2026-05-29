@@ -176,6 +176,19 @@ export interface PecaDetalhe {
   historico: TrocaHistorico[]
 }
 
+export interface Problema {
+  id: number
+  titulo: string
+  sintoma: string
+  dataInicio: string
+  dataResolucao: string | null
+  status: 'ABERTO' | 'RESOLVIDO'
+  trocaIdResolveu: number | null
+  trocaDescricao: string | null
+  pecasSuspeitas: { id: number; nome: string; categoriaNome: string }[]
+  observacoes?: string
+}
+
 export interface TrocaHistorico {
   id: number
   dataTroca: string
