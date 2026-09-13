@@ -1,5 +1,7 @@
 package com.delrey.api;
 
+import com.delrey.carro.Carro;
+import com.delrey.config.UserContextService;
 import com.delrey.peca.CategoriaPecaRepository;
 import com.delrey.peca.Peca;
 import com.delrey.peca.PecaRepository;
@@ -18,12 +20,14 @@ public class PecaApiController {
     private final PecaRepository pecaRepository;
     private final TrocaRepository trocaRepository;
     private final CategoriaPecaRepository categoriaRepository;
+    private final UserContextService userContextService;
 
     public PecaApiController(PecaRepository pecaRepository, TrocaRepository trocaRepository,
-                              CategoriaPecaRepository categoriaRepository) {
+                               CategoriaPecaRepository categoriaRepository, UserContextService userContextService) {
         this.pecaRepository = pecaRepository;
         this.trocaRepository = trocaRepository;
         this.categoriaRepository = categoriaRepository;
+        this.userContextService = userContextService;
     }
 
     record CategoriaDto(Long id, String nome) {}
@@ -82,7 +86,8 @@ public class PecaApiController {
     @GetMapping("/{id}")
     public PecaDetalhe detalhe(@PathVariable Long id) {
         Peca peca = pecaRepository.findById(id).orElseThrow();
-        List<TrocaHistorico> historico = trocaRepository.historicoPorPeca(id).stream()
+        Carro carro = userContextService.getCarroDoUsuarioAtual();
+        List<TrocaHistorico> historico = trocaRepository.historicoPorPeca(carro.getId(), id).stream()
                 .map(t -> new TrocaHistorico(t.getId(), t.getDataTroca(), t.getKm(),
                         t.getValor(), t.getMaoDeObra(), t.getFornecedor(), t.getGarantiaMeses(), t.getObservacoes()))
                 .toList();
