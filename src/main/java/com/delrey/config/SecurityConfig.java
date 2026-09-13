@@ -40,6 +40,12 @@ public class SecurityConfig {
     @Value("${app.users.kaio.password:aecproblematica}")
     private String kaioPassword;
 
+    @Value("${app.users.tigo5x.username:tigo5x}")
+    private String tigoUsername;
+
+    @Value("${app.users.tigo5x.password:tigo5x123}")
+    private String tigoPassword;
+
     @Value("${cors.allowed-origins:http://localhost:5173,http://localhost:3000,https://*.vercel.app}")
     private String allowedOrigins;
 
@@ -60,7 +66,12 @@ public class SecurityConfig {
                 .roles("USER")
                 .build();
 
-        return new InMemoryUserDetailsManager(admin, kaio);
+        var tigo = User.withUsername(tigoUsername)
+                .password(encoder.encode(tigoPassword))
+                .roles("USER")
+                .build();
+
+        return new InMemoryUserDetailsManager(admin, kaio, tigo);
     }
 
     @Bean
