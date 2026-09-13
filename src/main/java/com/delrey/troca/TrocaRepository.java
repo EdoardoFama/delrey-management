@@ -2,6 +2,7 @@ package com.delrey.troca;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -9,96 +10,94 @@ import java.util.List;
 
 public interface TrocaRepository extends JpaRepository<Troca, Long> {
 
-    List<Troca> findAllByOrderByDataTrocaDesc();
+    List<Troca> findByCarroIdOrderByDataTrocaDesc(Long carroId);
 
-    List<Troca> findByTipoOrderByDataTrocaDesc(String tipo);
+    List<Troca> findByCarroIdAndTipoOrderByDataTrocaDesc(Long carroId, String tipo);
 
-    List<Troca> findTop5ByOrderByDataTrocaDesc();
+    List<Troca> findTop5ByCarroIdAndDataTrocaBetweenOrderByDataTrocaDesc(Long carroId, LocalDate inicio, LocalDate fim);
 
-    List<Troca> findTop5ByDataTrocaBetweenOrderByDataTrocaDesc(LocalDate inicio, LocalDate fim);
+    @Query("select coalesce(sum(t.valor),0) + coalesce(sum(t.maoDeObra),0) from Troca t where t.carro.id = :carroId and t.dataTroca between :inicio and :fim")
+    BigDecimal totalGastoNoPeriodo(@Param("carroId") Long carroId, @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
-    @Query("select coalesce(sum(t.valor),0) + coalesce(sum(t.maoDeObra),0) from Troca t where t.dataTroca between :inicio and :fim")
-    BigDecimal totalGastoNoPeriodo(LocalDate inicio, LocalDate fim);
-
-    @Query("select coalesce(sum(t.valor),0) + coalesce(sum(t.maoDeObra),0) from Troca t where t.dataTroca between :inicio and :fim and t.tipo = :tipo")
-    BigDecimal totalGastoNoPeriodoPorTipo(LocalDate inicio, LocalDate fim, String tipo);
+    @Query("select coalesce(sum(t.valor),0) + coalesce(sum(t.maoDeObra),0) from Troca t where t.carro.id = :carroId and t.dataTroca between :inicio and :fim and t.tipo = :tipo")
+    BigDecimal totalGastoNoPeriodoPorTipo(@Param("carroId") Long carroId, @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim, @Param("tipo") String tipo);
 
     @Query("""
         select t.peca.categoria.nome as categoria, coalesce(sum(t.valor),0) + coalesce(sum(t.maoDeObra),0) as total
         from Troca t
-        where year(t.dataTroca) = :ano and t.tipo = :tipo
+        where t.carro.id = :carroId and year(t.dataTroca) = :ano and t.tipo = :tipo
         group by t.peca.categoria.nome
         order by total desc
     """)
-    List<Object[]> totalPorCategoriaNoAnoPorTipo(int ano, String tipo);
+    List<Object[]> totalPorCategoriaNoAnoPorTipo(@Param("carroId") Long carroId, @Param("ano") int ano, @Param("tipo") String tipo);
 
     @Query("""
         select t from Troca t
-        where t.peca.id = :pecaId
+        where t.carro.id = :carroId and t.peca.id = :pecaId
         order by t.dataTroca desc
     """)
-    List<Troca> historicoPorPeca(Long pecaId);
+    List<Troca> historicoPorPeca(@Param("carroId") Long carroId, @Param("pecaId") Long pecaId);
 
     @Query("""
         select t.peca.categoria.nome as categoria, coalesce(sum(t.valor),0) + coalesce(sum(t.maoDeObra),0) as total
         from Troca t
-        where year(t.dataTroca) = :ano
+        where t.carro.id = :carroId and year(t.dataTroca) = :ano
         group by t.peca.categoria.nome
         order by total desc
     """)
-    List<Object[]> totalPorCategoriaNoAno(int ano);
+    List<Object[]> totalPorCategoriaNoAno(@Param("carroId") Long carroId, @Param("ano") int ano);
 
     @Query("""
         select t.peca.categoria.nome as categoria, coalesce(sum(t.valor),0) + coalesce(sum(t.maoDeObra),0) as total
         from Troca t
-        where t.dataTroca between :inicio and :fim
+        where t.carro.id = :carroId and t.dataTroca between :inicio and :fim
         group by t.peca.categoria.nome
         order by total desc
     """)
-    List<Object[]> totalPorCategoriaNoPeriodo(LocalDate inicio, LocalDate fim);
+    List<Object[]> totalPorCategoriaNoPeriodo(@Param("carroId") Long carroId, @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
     @Query("""
         select t.peca.categoria.nome as categoria, coalesce(sum(t.valor),0) + coalesce(sum(t.maoDeObra),0) as total
         from Troca t
-        where t.dataTroca between :inicio and :fim and t.tipo = :tipo
+        where t.carro.id = :carroId and t.dataTroca between :inicio and :fim and t.tipo = :tipo
         group by t.peca.categoria.nome
         order by total desc
     """)
-    List<Object[]> totalPorCategoriaNoPeriodoPorTipo(LocalDate inicio, LocalDate fim, String tipo);
+    List<Object[]> totalPorCategoriaNoPeriodoPorTipo(@Param("carroId") Long carroId, @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim, @Param("tipo") String tipo);
 
-    @Query("select distinct year(t.dataTroca) from Troca t order by year(t.dataTroca) desc")
-    List<Integer> anosComRegistros();
+    @Query("select distinct year(t.dataTroca) from Troca t where t.carro.id = :carroId order by year(t.dataTroca) desc")
+    List<Integer> anosComRegistros(@Param("carroId") Long carroId);
 
     @Query("""
         select t.fornecedor as fornecedor, coalesce(sum(t.valor),0) + coalesce(sum(t.maoDeObra),0) as total, count(t) as qtd
         from Troca t
-        where t.fornecedor is not null and t.fornecedor <> ''
+        where t.carro.id = :carroId and t.fornecedor is not null and t.fornecedor <> ''
               and t.dataTroca between :inicio and :fim
         group by t.fornecedor
         order by total desc
     """)
-    List<Object[]> rankingFornecedoresNoPeriodo(LocalDate inicio, LocalDate fim);
+    List<Object[]> rankingFornecedoresNoPeriodo(@Param("carroId") Long carroId, @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
-    @Query("select min(t.km) from Troca t where t.dataTroca between :inicio and :fim and t.km is not null")
-    Integer kmMinNoPeriodo(LocalDate inicio, LocalDate fim);
+    @Query("select min(t.km) from Troca t where t.carro.id = :carroId and t.dataTroca between :inicio and :fim and t.km is not null")
+    Integer kmMinNoPeriodo(@Param("carroId") Long carroId, @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
-    @Query("select max(t.km) from Troca t where t.dataTroca between :inicio and :fim and t.km is not null")
-    Integer kmMaxNoPeriodo(LocalDate inicio, LocalDate fim);
+    @Query("select max(t.km) from Troca t where t.carro.id = :carroId and t.dataTroca between :inicio and :fim and t.km is not null")
+    Integer kmMaxNoPeriodo(@Param("carroId") Long carroId, @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
     @Query("""
         select t from Troca t
-        where t.tipo = 'SERVICO' and t.garantiaMeses is not null and t.garantiaMeses > 0
+        where t.carro.id = :carroId and t.tipo = 'SERVICO' and t.garantiaMeses is not null and t.garantiaMeses > 0
         order by t.dataTroca desc
     """)
-    List<Troca> servicosComGarantiaConfigurada();
+    List<Troca> servicosComGarantiaConfigurada(@Param("carroId") Long carroId);
 
     @Query(value = """
         select t.* from troca t
-        where t.id in (
+        where t.carro_id = :carroId and t.id in (
             select max(t2.id) from troca t2
-            where t2.peca_id = t.peca_id
+            where t2.carro_id = :carroId
             group by t2.peca_id
         )
     """, nativeQuery = true)
-    List<Troca> ultimaTrocaDeCadaPeca();
+    List<Troca> ultimaTrocaDeCadaPeca(@Param("carroId") Long carroId);
 }

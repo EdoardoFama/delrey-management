@@ -1,6 +1,8 @@
 package com.delrey.api;
 
+import com.delrey.carro.Carro;
 import com.delrey.carro.CarroRepository;
+import com.delrey.config.UserContextService;
 import com.delrey.peca.Peca;
 import com.delrey.peca.PecaRepository;
 import com.delrey.problema.Problema;
@@ -20,13 +22,16 @@ public class ProblemaApiController {
     private final CarroRepository carroRepository;
     private final PecaRepository pecaRepository;
     private final TrocaRepository trocaRepository;
+    private final UserContextService userContextService;
 
     public ProblemaApiController(ProblemaRepository problemaRepository, CarroRepository carroRepository,
-                                  PecaRepository pecaRepository, TrocaRepository trocaRepository) {
+                                  PecaRepository pecaRepository, TrocaRepository trocaRepository,
+                                  UserContextService userContextService) {
         this.problemaRepository = problemaRepository;
         this.carroRepository = carroRepository;
         this.pecaRepository = pecaRepository;
         this.trocaRepository = trocaRepository;
+        this.userContextService = userContextService;
     }
 
     record PecaSuspeitaDto(Long id, String nome, String categoriaNome) {}
@@ -71,7 +76,8 @@ public class ProblemaApiController {
 
     @GetMapping
     public List<ProblemaDto> listar(@RequestParam(required = false) String status) {
-        return problemaRepository.findAllByOrderByDataInicioDesc().stream()
+        Carro carro = userContextService.getCarroDoUsuarioAtual();
+        return problemaRepository.findByCarroIdOrderByDataInicioDesc(carro.getId()).stream()
             .filter(p -> {
                 if ("ABERTO".equals(status)) return p.getDataResolucao() == null;
                 if ("RESOLVIDO".equals(status)) return p.getDataResolucao() != null;
@@ -83,8 +89,9 @@ public class ProblemaApiController {
 
     @PostMapping
     public ProblemaDto criar(@RequestBody ProblemaInput req) {
+        Carro carro = userContextService.getCarroDoUsuarioAtual();
         Problema p = new Problema();
-        p.setCarro(carroRepository.findAll().get(0));
+        p.setCarro(carro);
         p.setTitulo(req.titulo());
         p.setSintoma(req.sintoma());
         p.setDataInicio(req.dataInicio() != null ? req.dataInicio() : LocalDate.now());

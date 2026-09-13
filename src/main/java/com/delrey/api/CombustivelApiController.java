@@ -1,9 +1,9 @@
 package com.delrey.api;
 
 import com.delrey.carro.Carro;
-import com.delrey.carro.CarroRepository;
 import com.delrey.combustivel.Abastecimento;
 import com.delrey.combustivel.AbastecimentoRepository;
+import com.delrey.config.UserContextService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,11 +18,11 @@ import java.util.List;
 public class CombustivelApiController {
 
     private final AbastecimentoRepository repo;
-    private final CarroRepository carroRepository;
+    private final UserContextService userContextService;
 
-    public CombustivelApiController(AbastecimentoRepository repo, CarroRepository carroRepository) {
+    public CombustivelApiController(AbastecimentoRepository repo, UserContextService userContextService) {
         this.repo = repo;
-        this.carroRepository = carroRepository;
+        this.userContextService = userContextService;
     }
 
     public record AbastecimentoDto(
@@ -49,8 +49,9 @@ public class CombustivelApiController {
 
     @GetMapping
     public CombustivelResumo listar() {
+        Carro carro = userContextService.getCarroDoUsuarioAtual();
         // ordenado ASC para calcular consumo entre consecutivos
-        List<Abastecimento> ordemAsc = repo.findAllByOrderByDataAsc();
+        List<Abastecimento> ordemAsc = repo.findByCarroIdOrderByDataAsc(carro.getId());
 
         // calcula km/L de cada um (em relação ao anterior tanque cheio)
         List<AbastecimentoDto> dtos = new ArrayList<>();
@@ -113,7 +114,7 @@ public class CombustivelApiController {
 
     @PostMapping
     public AbastecimentoDto criar(@RequestBody AbastecimentoRequest req) {
-        Carro carro = carroRepository.findAll().get(0);
+        Carro carro = userContextService.getCarroDoUsuarioAtual();
         Abastecimento a = new Abastecimento();
         a.setCarro(carro);
         a.setData(req.data() != null ? req.data() : LocalDate.now());
@@ -129,7 +130,7 @@ public class CombustivelApiController {
 
         if (a.getKm() != null && (carro.getKmAtual() == null || a.getKm() > carro.getKmAtual())) {
             carro.setKmAtual(a.getKm());
-            carroRepository.save(carro);
+            userContextService.getCarroDoUsuarioAtual();
         }
 
         return new AbastecimentoDto(a.getId(), a.getData(), a.getKm(), a.getLitros(),

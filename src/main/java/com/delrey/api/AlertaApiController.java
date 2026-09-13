@@ -1,7 +1,7 @@
 package com.delrey.api;
 
 import com.delrey.carro.Carro;
-import com.delrey.carro.CarroRepository;
+import com.delrey.config.UserContextService;
 import com.delrey.peca.Peca;
 import com.delrey.peca.PecaRepository;
 import com.delrey.troca.Troca;
@@ -22,12 +22,12 @@ public class AlertaApiController {
 
     private final TrocaRepository trocaRepository;
     private final PecaRepository pecaRepository;
-    private final CarroRepository carroRepository;
+    private final UserContextService userContextService;
 
-    public AlertaApiController(TrocaRepository trocaRepository, PecaRepository pecaRepository, CarroRepository carroRepository) {
+    public AlertaApiController(TrocaRepository trocaRepository, PecaRepository pecaRepository, UserContextService userContextService) {
         this.trocaRepository = trocaRepository;
         this.pecaRepository = pecaRepository;
-        this.carroRepository = carroRepository;
+        this.userContextService = userContextService;
     }
 
     // status: ATRASADO, PROXIMO, OK
@@ -49,11 +49,12 @@ public class AlertaApiController {
 
     @GetMapping("/manutencao")
     public List<AlertaManutencao> manutencao() {
-        Carro carro = carroRepository.findAll().stream().findFirst().orElse(null);
+        Carro carro = userContextService.getCarroDoUsuarioAtual();
         Integer kmAtual = carro != null ? carro.getKmAtual() : null;
         LocalDate hoje = LocalDate.now();
 
-        Map<Long, Troca> ultimaPorPeca = trocaRepository.ultimaTrocaDeCadaPeca().stream()
+        Map<Long, Troca> ultimaPorPeca = (carro != null ? trocaRepository.ultimaTrocaDeCadaPeca(carro.getId()) : Collections.<Troca>emptyList())
+                .stream()
                 .collect(Collectors.toMap(t -> t.getPeca().getId(), t -> t, (a, b) -> a));
 
         List<AlertaManutencao> alertas = new ArrayList<>();
@@ -109,9 +110,11 @@ public class AlertaApiController {
 
     @GetMapping("/garantia")
     public List<GarantiaAtiva> garantia() {
+        Carro carro = userContextService.getCarroDoUsuarioAtual();
         LocalDate hoje = LocalDate.now();
         List<GarantiaAtiva> ativas = new ArrayList<>();
-        for (Troca t : trocaRepository.servicosComGarantiaConfigurada()) {
+        List<Troca> servicos = carro != null ? trocaRepository.servicosComGarantiaConfigurada(carro.getId()) : Collections.emptyList();
+        for (Troca t : servicos) {
             LocalDate validaAte = t.getDataTroca().plusMonths(t.getGarantiaMeses());
             if (validaAte.isBefore(hoje)) continue;
             int dias = (int) ChronoUnit.DAYS.between(hoje, validaAte);

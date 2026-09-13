@@ -4,6 +4,7 @@ import com.delrey.carro.Carro;
 import com.delrey.carro.CarroRepository;
 import com.delrey.combustivel.Abastecimento;
 import com.delrey.combustivel.AbastecimentoRepository;
+import com.delrey.config.UserContextService;
 import com.delrey.hodometro.LeituraKm;
 import com.delrey.hodometro.LeituraKmRepository;
 import com.delrey.peca.Peca;
@@ -31,14 +32,17 @@ public class ProjecaoApiController {
     private final CarroRepository carroRepository;
     private final LeituraKmRepository leituraRepository;
     private final AbastecimentoRepository abastRepository;
+    private final UserContextService userContextService;
 
     public ProjecaoApiController(TrocaRepository t, PecaRepository p, CarroRepository c,
-                                  LeituraKmRepository l, AbastecimentoRepository a) {
+                                  LeituraKmRepository l, AbastecimentoRepository a,
+                                  UserContextService userContextService) {
         this.trocaRepository = t;
         this.pecaRepository = p;
         this.carroRepository = c;
         this.leituraRepository = l;
         this.abastRepository = a;
+        this.userContextService = userContextService;
     }
 
     public record ManutencaoPrevista(
@@ -69,12 +73,15 @@ public class ProjecaoApiController {
 
     @GetMapping
     public ProjecaoResponse get(@RequestParam(required = false) Integer mesesHistorico) {
+        Carro carro = userContextService.getCarroDoUsuarioAtual();
+        Long carroId = carro.getId();
+
         int N = mesesHistorico != null && mesesHistorico > 0 ? mesesHistorico : 12;
         LocalDate hoje = LocalDate.now();
         LocalDate inicioHistorico = hoje.minusMonths(N);
 
         // Ritmo de uso (km/mês) — derivado das leituras
-        List<LeituraKm> leituras = leituraRepository.findAllByOrderByDataDesc();
+        List<LeituraKm> leituras = leituraRepository.findByCarroIdOrderByDataDesc(carroId);
         Double ritmoKmPorMes = null;
         if (leituras.size() >= 2) {
             LeituraKm recente = leituras.get(0);
@@ -87,20 +94,18 @@ public class ProjecaoApiController {
         }
 
         // Consumo + preço médio combustível
-        List<Abastecimento> abasts = abastRepository.findAllByOrderByDataAsc();
+        List<Abastecimento> abasts = abastRepository.findByCarroIdOrderByDataAsc(carroId);
         BigDecimal consumoMedio = calcularConsumoMedio(abasts);
         BigDecimal valorLitroMedio = calcularValorLitroMedio(abasts);
 
         // Média mensal histórica (gastos totais)
-        BigDecimal totalHistorico = nz(trocaRepository.totalGastoNoPeriodo(inicioHistorico, hoje));
+        BigDecimal totalHistorico = nz(trocaRepository.totalGastoNoPeriodo(carroId, inicioHistorico, hoje));
         BigDecimal mediaMensal = totalHistorico.divide(BigDecimal.valueOf(N), 2, RoundingMode.HALF_UP);
 
-        // Carro
-        Carro carro = carroRepository.findAll().stream().findFirst().orElse(null);
-        Integer kmAtual = carro != null ? carro.getKmAtual() : null;
+        Integer kmAtual = carro.getKmAtual();
 
         // Últimas trocas por peça (para usar no custo estimado e na previsão)
-        Map<Long, Troca> ultimaPorPeca = trocaRepository.ultimaTrocaDeCadaPeca().stream()
+        Map<Long, Troca> ultimaPorPeca = trocaRepository.ultimaTrocaDeCadaPeca(carroId).stream()
                 .collect(Collectors.toMap(t -> t.getPeca().getId(), t -> t, (a, b) -> a));
 
         // Calcula períodos de 3, 6 e 12 meses

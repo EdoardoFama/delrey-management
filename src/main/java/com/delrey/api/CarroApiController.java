@@ -2,6 +2,7 @@ package com.delrey.api;
 
 import com.delrey.carro.Carro;
 import com.delrey.carro.CarroRepository;
+import com.delrey.config.UserContextService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,12 +20,14 @@ import java.util.UUID;
 public class CarroApiController {
 
     private final CarroRepository carroRepository;
+    private final UserContextService userContextService;
 
     @Value("${app.upload-dir}")
     private String uploadDir;
 
-    public CarroApiController(CarroRepository carroRepository) {
+    public CarroApiController(CarroRepository carroRepository, UserContextService userContextService) {
         this.carroRepository = carroRepository;
+        this.userContextService = userContextService;
     }
 
     record CarroDto(Long id, String modelo, Integer ano, String motor, String versao,
@@ -41,12 +44,12 @@ public class CarroApiController {
 
     @GetMapping
     public CarroDto get() {
-        return carroRepository.findAll().stream().findFirst().map(this::toDto).orElseThrow();
+        return toDto(userContextService.getCarroDoUsuarioAtual());
     }
 
     @PutMapping
     public CarroDto update(@RequestBody CarroUpdateRequest req) {
-        Carro carro = carroRepository.findAll().get(0);
+        Carro carro = userContextService.getCarroDoUsuarioAtual();
         if (req.modelo() != null) carro.setModelo(req.modelo());
         if (req.ano() != null) carro.setAno(req.ano());
         if (req.motor() != null) carro.setMotor(req.motor());
@@ -60,7 +63,7 @@ public class CarroApiController {
 
     @PostMapping("/foto")
     public CarroDto uploadFoto(@RequestParam("file") MultipartFile file) throws IOException {
-        Carro carro = carroRepository.findAll().get(0);
+        Carro carro = userContextService.getCarroDoUsuarioAtual();
 
         Path dir = Paths.get(uploadDir);
         Files.createDirectories(dir);
@@ -83,7 +86,7 @@ public class CarroApiController {
 
     @GetMapping("/foto")
     public ResponseEntity<byte[]> getFoto() throws IOException {
-        Carro carro = carroRepository.findAll().get(0);
+        Carro carro = userContextService.getCarroDoUsuarioAtual();
         if (carro.getFotoPath() == null) return ResponseEntity.notFound().build();
 
         Path path = Paths.get(uploadDir, carro.getFotoPath());

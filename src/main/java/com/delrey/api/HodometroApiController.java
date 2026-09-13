@@ -2,6 +2,7 @@ package com.delrey.api;
 
 import com.delrey.carro.Carro;
 import com.delrey.carro.CarroRepository;
+import com.delrey.config.UserContextService;
 import com.delrey.hodometro.LeituraKm;
 import com.delrey.hodometro.LeituraKmRepository;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +18,12 @@ public class HodometroApiController {
 
     private final LeituraKmRepository repo;
     private final CarroRepository carroRepository;
+    private final UserContextService userContextService;
 
-    public HodometroApiController(LeituraKmRepository repo, CarroRepository carroRepository) {
+    public HodometroApiController(LeituraKmRepository repo, CarroRepository carroRepository, UserContextService userContextService) {
         this.repo = repo;
         this.carroRepository = carroRepository;
+        this.userContextService = userContextService;
     }
 
     public record LeituraDto(Long id, LocalDate data, Integer km, String observacoes) {}
@@ -39,9 +42,9 @@ public class HodometroApiController {
 
     @GetMapping
     public HodometroResumo listar() {
-        List<LeituraDto> leituras = repo.findAllByOrderByDataDesc().stream().map(this::toDto).toList();
-        Carro carro = carroRepository.findAll().stream().findFirst().orElse(null);
-        Integer kmAtual = carro != null ? carro.getKmAtual() : null;
+        Carro carro = userContextService.getCarroDoUsuarioAtual();
+        List<LeituraDto> leituras = repo.findByCarroIdOrderByDataDesc(carro.getId()).stream().map(this::toDto).toList();
+        Integer kmAtual = carro.getKmAtual();
 
         Double kmMes = null;
         Integer totalRodado = null;
@@ -63,7 +66,7 @@ public class HodometroApiController {
 
     @PostMapping
     public LeituraDto criar(@RequestBody LeituraRequest req) {
-        Carro carro = carroRepository.findAll().get(0);
+        Carro carro = userContextService.getCarroDoUsuarioAtual();
         LeituraKm l = new LeituraKm();
         l.setCarro(carro);
         l.setData(req.data() != null ? req.data() : LocalDate.now());

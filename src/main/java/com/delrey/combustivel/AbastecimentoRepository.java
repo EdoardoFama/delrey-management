@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface AbastecimentoRepository extends JpaRepository<Abastecimento, Long> {
-    List<Abastecimento> findAllByOrderByDataDesc();
-    List<Abastecimento> findAllByOrderByDataAsc();
-    List<Abastecimento> findByDataBetweenOrderByDataAsc(LocalDate inicio, LocalDate fim);
+    List<Abastecimento> findByCarroIdOrderByDataAsc(Long carroId);
+    List<Abastecimento> findByCarroIdOrderByDataDesc(Long carroId);
+    List<Abastecimento> findByCarroIdAndDataBetweenOrderByDataAsc(Long carroId, LocalDate inicio, LocalDate fim);
 }

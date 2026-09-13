@@ -1,7 +1,7 @@
 package com.delrey.api;
 
 import com.delrey.carro.Carro;
-import com.delrey.carro.CarroRepository;
+import com.delrey.config.UserContextService;
 import com.delrey.troca.TrocaRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,11 +18,11 @@ import java.util.List;
 public class DashboardApiController {
 
     private final TrocaRepository trocaRepository;
-    private final CarroRepository carroRepository;
+    private final UserContextService userContextService;
 
-    public DashboardApiController(TrocaRepository trocaRepository, CarroRepository carroRepository) {
+    public DashboardApiController(TrocaRepository trocaRepository, UserContextService userContextService) {
         this.trocaRepository = trocaRepository;
-        this.carroRepository = carroRepository;
+        this.userContextService = userContextService;
     }
 
     record CarroDto(Long id, String modelo, Integer ano, String motor, String versao, Integer kmAtual) {}
@@ -51,6 +51,9 @@ public class DashboardApiController {
             @RequestParam(required = false) Integer ano,
             @RequestParam(required = false) Integer mes
     ) {
+        Carro carro = userContextService.getCarroDoUsuarioAtual();
+        Long carroId = carro.getId();
+
         int anoFiltro = ano != null ? ano : Year.now().getValue();
         LocalDate inicio;
         LocalDate fim;
@@ -62,43 +65,41 @@ public class DashboardApiController {
             fim = LocalDate.of(anoFiltro, 12, 31);
         }
 
-        BigDecimal totalPeriodo = nz(trocaRepository.totalGastoNoPeriodo(inicio, fim));
-        BigDecimal totalCompras = nz(trocaRepository.totalGastoNoPeriodoPorTipo(inicio, fim, "COMPRA"));
-        BigDecimal totalServicos = nz(trocaRepository.totalGastoNoPeriodoPorTipo(inicio, fim, "SERVICO"));
+        BigDecimal totalPeriodo = nz(trocaRepository.totalGastoNoPeriodo(carroId, inicio, fim));
+        BigDecimal totalCompras = nz(trocaRepository.totalGastoNoPeriodoPorTipo(carroId, inicio, fim, "COMPRA"));
+        BigDecimal totalServicos = nz(trocaRepository.totalGastoNoPeriodoPorTipo(carroId, inicio, fim, "SERVICO"));
 
-        Carro carro = carroRepository.findAll().stream().findFirst().orElse(null);
-        CarroDto carroDto = carro == null ? null
-                : new CarroDto(carro.getId(), carro.getModelo(), carro.getAno(), carro.getMotor(), carro.getVersao(), carro.getKmAtual());
+        CarroDto carroDto = new CarroDto(carro.getId(), carro.getModelo(), carro.getAno(), carro.getMotor(), carro.getVersao(), carro.getKmAtual());
 
-        List<TrocaSummary> ultimasTrocas = trocaRepository.findTop5ByDataTrocaBetweenOrderByDataTrocaDesc(inicio, fim).stream()
+        List<TrocaSummary> ultimasTrocas = trocaRepository.findTop5ByCarroIdAndDataTrocaBetweenOrderByDataTrocaDesc(carroId, inicio, fim).stream()
                 .map(t -> new TrocaSummary(t.getId(), t.getPeca().getNome(), t.getPeca().getCategoria().getNome(),
                         t.getDataTroca(), t.getValor(), t.getMaoDeObra(), t.getKm()))
                 .toList();
 
-        List<CategoriaTotal> porCategoria = trocaRepository.totalPorCategoriaNoPeriodo(inicio, fim).stream()
+        List<CategoriaTotal> porCategoria = trocaRepository.totalPorCategoriaNoPeriodo(carroId, inicio, fim).stream()
                 .map(row -> new CategoriaTotal((String) row[0], (BigDecimal) row[1]))
                 .toList();
 
-        List<CategoriaTotal> porCategoriaCompras = trocaRepository.totalPorCategoriaNoPeriodoPorTipo(inicio, fim, "COMPRA").stream()
+        List<CategoriaTotal> porCategoriaCompras = trocaRepository.totalPorCategoriaNoPeriodoPorTipo(carroId, inicio, fim, "COMPRA").stream()
                 .map(row -> new CategoriaTotal((String) row[0], (BigDecimal) row[1]))
                 .toList();
 
-        List<CategoriaTotal> porCategoriaServicos = trocaRepository.totalPorCategoriaNoPeriodoPorTipo(inicio, fim, "SERVICO").stream()
+        List<CategoriaTotal> porCategoriaServicos = trocaRepository.totalPorCategoriaNoPeriodoPorTipo(carroId, inicio, fim, "SERVICO").stream()
                 .map(row -> new CategoriaTotal((String) row[0], (BigDecimal) row[1]))
                 .toList();
 
-        List<Integer> anosDisponiveis = trocaRepository.anosComRegistros();
+        List<Integer> anosDisponiveis = trocaRepository.anosComRegistros(carroId);
         if (anosDisponiveis.isEmpty()) {
             anosDisponiveis = List.of(Year.now().getValue());
         }
 
-        List<FornecedorTotal> rankingFornecedores = trocaRepository.rankingFornecedoresNoPeriodo(inicio, fim).stream()
+        List<FornecedorTotal> rankingFornecedores = trocaRepository.rankingFornecedoresNoPeriodo(carroId, inicio, fim).stream()
                 .limit(5)
                 .map(row -> new FornecedorTotal((String) row[0], (BigDecimal) row[1], ((Number) row[2]).longValue()))
                 .toList();
 
-        Integer kmMin = trocaRepository.kmMinNoPeriodo(inicio, fim);
-        Integer kmMax = trocaRepository.kmMaxNoPeriodo(inicio, fim);
+        Integer kmMin = trocaRepository.kmMinNoPeriodo(carroId, inicio, fim);
+        Integer kmMax = trocaRepository.kmMaxNoPeriodo(carroId, inicio, fim);
         Integer kmRodados = (kmMin != null && kmMax != null && kmMax > kmMin) ? kmMax - kmMin : null;
         BigDecimal custoKm = (kmRodados != null && kmRodados > 0)
                 ? totalPeriodo.divide(BigDecimal.valueOf(kmRodados), 2, java.math.RoundingMode.HALF_UP)

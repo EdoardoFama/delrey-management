@@ -27,5 +27,7 @@ public class Carro {
     @Column(name = "foto_path")
     private String fotoPath;
 
+    private String usuario;
+
     private String observacoes;
 }
