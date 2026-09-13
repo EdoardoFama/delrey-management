@@ -5,10 +5,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -30,9 +33,15 @@ import java.util.List;
 public class SecurityConfig {
 
     private final RateLimitingFilter rateLimitingFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtService jwtService;
 
-    public SecurityConfig(RateLimitingFilter rateLimitingFilter) {
+    public SecurityConfig(RateLimitingFilter rateLimitingFilter,
+                          JwtAuthenticationFilter jwtAuthenticationFilter,
+                          JwtService jwtService) {
         this.rateLimitingFilter = rateLimitingFilter;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.jwtService = jwtService;
     }
 
     @Value("${app.users.admin.username:delrey}")
@@ -59,6 +68,11 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 
     @Bean
@@ -98,7 +112,7 @@ public class SecurityConfig {
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(List.of("Set-Cookie"));
+        configuration.setExposedHeaders(List.of("Set-Cookie", "Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
@@ -110,13 +124,15 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .cors(Customizer.withDefaults())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .headers(headers -> headers
                 .frameOptions(frame -> frame.deny())
                 .xssProtection(Customizer.withDefaults())
             )
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/logout", "/health", "/api/health", "/", "/api/login", "/api/logout").permitAll()
+                .requestMatchers("/login", "/logout", "/health", "/api/health", "/", "/api/login", "/api/auth/login", "/api/logout").permitAll()
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex
@@ -128,13 +144,15 @@ public class SecurityConfig {
             .formLogin(form -> form
                 .loginProcessingUrl("/api/login")
                 .successHandler((request, response, authentication) -> {
+                    String username = authentication.getName();
+                    String token = jwtService.generateToken(username);
                     response.setStatus(HttpServletResponse.SC_OK);
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"status\":\"ok\"}");
+                    response.setContentType("application/json; charset=UTF-8");
+                    response.getWriter().write("{\"status\":\"ok\",\"token\":\"" + token + "\",\"username\":\"" + username + "\",\"expiresIn\":" + (jwtService.getJwtExpirationMs() / 1000) + "}");
                 })
                 .failureHandler((request, response, exception) -> {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.setContentType("application/json");
+                    response.setContentType("application/json; charset=UTF-8");
                     response.getWriter().write("{\"error\":\"Credenciais inválidas\"}");
                 })
                 .permitAll()
@@ -143,7 +161,7 @@ public class SecurityConfig {
                 .logoutUrl("/api/logout")
                 .logoutSuccessHandler((request, response, authentication) -> {
                     response.setStatus(HttpServletResponse.SC_OK);
-                    response.setContentType("application/json");
+                    response.setContentType("application/json; charset=UTF-8");
                     response.getWriter().write("{\"status\":\"logged_out\"}");
                 })
                 .permitAll()

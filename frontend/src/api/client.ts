@@ -1,13 +1,23 @@
 const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 
+function getAuthHeader(): Record<string, string> {
+  const token = localStorage.getItem('jwt_token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(base + path, {
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeader(),
+      ...options?.headers,
+    },
     ...options,
   })
 
   if (res.status === 401) {
+    localStorage.removeItem('jwt_token')
     window.location.href = '/login'
     throw new Error('Não autenticado')
   }
@@ -59,16 +69,34 @@ export const api = {
     form.append('file', file)
     form.append('trocaId', String(trocaId))
     if (descricao) form.append('descricao', descricao)
-    const res = await fetch(`${base}/api/anexos`, { method: 'POST', credentials: 'include', body: form })
-    if (res.status === 401) { window.location.href = '/login'; throw new Error('Não autenticado') }
+    const res = await fetch(`${base}/api/anexos`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: getAuthHeader(),
+      body: form
+    })
+    if (res.status === 401) {
+      localStorage.removeItem('jwt_token')
+      window.location.href = '/login'
+      throw new Error('Não autenticado')
+    }
     if (!res.ok) throw new Error(`Erro ${res.status}`)
     return res.json()
   },
   uploadCarroFoto: async (file: File) => {
     const form = new FormData()
     form.append('file', file)
-    const res = await fetch(`${base}/api/carro/foto`, { method: 'POST', credentials: 'include', body: form })
-    if (res.status === 401) { window.location.href = '/login'; throw new Error('Não autenticado') }
+    const res = await fetch(`${base}/api/carro/foto`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: getAuthHeader(),
+      body: form
+    })
+    if (res.status === 401) {
+      localStorage.removeItem('jwt_token')
+      window.location.href = '/login'
+      throw new Error('Não autenticado')
+    }
     if (!res.ok) throw new Error(`Erro ${res.status}`)
     return res.json()
   },

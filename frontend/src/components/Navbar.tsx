@@ -1,5 +1,4 @@
 import { NavLink } from 'react-router-dom'
-import DelReyIcon from './DelReyIcon'
 
 const links = [
   { to: '/', label: 'Dashboard' },
@@ -21,13 +20,16 @@ export default function Navbar() {
     e.preventDefault()
     try {
       const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+      const token = localStorage.getItem('jwt_token')
       await fetch(`${base}/api/logout`, {
         method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         credentials: 'include',
       })
     } catch {
       // Continua para o redirect mesmo se a rede falhar
     } finally {
+      localStorage.removeItem('jwt_token')
       window.location.href = '/login?logout'
     }
   }
@@ -36,7 +38,6 @@ export default function Navbar() {
     <nav className="border-b border-purple-900/40 bg-[#0d0d1a]">
       <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
         <div className="flex items-center gap-3">
-          <DelReyIcon className="h-9 w-auto" />
           <span className="font-bold text-white text-lg tracking-tight">
             Del Rey <span className="text-purple-400">1990</span>
           </span>
