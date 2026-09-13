@@ -58,9 +58,16 @@ public class DataSourceConfig {
                             .append(host)
                             .append(":").append(port)
                             .append(path);
+                    // Supabase e maioria dos provedores cloud exigem SSL
                     if (query != null && !query.isBlank()) {
                         jdbcUrl.append("?").append(query);
+                        if (!query.contains("sslmode")) {
+                            jdbcUrl.append("&sslmode=require");
+                        }
+                    } else {
+                        jdbcUrl.append("?sslmode=require");
                     }
+
 
                     config.setJdbcUrl(jdbcUrl.toString());
                     if (!username.isBlank()) config.setUsername(username);
