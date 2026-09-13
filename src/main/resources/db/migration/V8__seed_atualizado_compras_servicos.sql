@@ -1,16 +1,13 @@
 -- V8: Seed atualizado de Compras e Serviços com valores e KM reais da planilha
 -- 1. Garantir que as peças novas da planilha existam no catálogo
 INSERT INTO peca (nome, categoria_id)
-SELECT 'Bomba de Direção Hidráulica', id FROM categoria_peca WHERE nome='Direção'
-WHERE NOT EXISTS (SELECT 1 FROM peca WHERE nome='Bomba de Direção Hidráulica');
+SELECT 'Bomba de Direção Hidráulica', id FROM categoria_peca WHERE nome='Direção' AND NOT EXISTS (SELECT 1 FROM peca WHERE nome='Bomba de Direção Hidráulica');
 
 INSERT INTO peca (nome, categoria_id)
-SELECT 'Cabeçote', id FROM categoria_peca WHERE nome='Motor'
-WHERE NOT EXISTS (SELECT 1 FROM peca WHERE nome='Cabeçote');
+SELECT 'Cabeçote', id FROM categoria_peca WHERE nome='Motor' AND NOT EXISTS (SELECT 1 FROM peca WHERE nome='Cabeçote');
 
 INSERT INTO peca (nome, categoria_id)
-SELECT 'Tubo D''agua Motor', id FROM categoria_peca WHERE nome='Arrefecimento'
-WHERE NOT EXISTS (SELECT 1 FROM peca WHERE nome='Tubo D''agua Motor');
+SELECT 'Tubo D''agua Motor', id FROM categoria_peca WHERE nome='Arrefecimento' AND NOT EXISTS (SELECT 1 FROM peca WHERE nome='Tubo D''agua Motor');
 
 -- 2. Limpar dados anteriores de trocas para reinserção limpa e sem duplicatas
 DELETE FROM anexo WHERE troca_id IN (SELECT id FROM troca WHERE carro_id = 1);
