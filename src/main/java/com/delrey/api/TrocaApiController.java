@@ -6,8 +6,10 @@ import com.delrey.config.UserContextService;
 import com.delrey.peca.PecaRepository;
 import com.delrey.troca.Troca;
 import com.delrey.troca.TrocaRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -80,6 +82,10 @@ public class TrocaApiController {
     @PutMapping("/{id}")
     public TrocaDto update(@PathVariable Long id, @RequestBody TrocaRequest req) {
         Troca troca = trocaRepository.findById(id).orElseThrow();
+        Carro carroUsuario = userContextService.getCarroDoUsuarioAtual();
+        if (!troca.getCarro().getId().equals(carroUsuario.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado ao recurso");
+        }
         if (req.pecaId() != null) troca.setPeca(pecaRepository.findById(req.pecaId()).orElseThrow());
         if (req.dataTroca() != null) troca.setDataTroca(req.dataTroca());
         if (req.km() != null) troca.setKm(req.km());
@@ -93,6 +99,11 @@ public class TrocaApiController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
+        Troca troca = trocaRepository.findById(id).orElseThrow();
+        Carro carroUsuario = userContextService.getCarroDoUsuarioAtual();
+        if (!troca.getCarro().getId().equals(carroUsuario.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado ao recurso");
+        }
         trocaRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }

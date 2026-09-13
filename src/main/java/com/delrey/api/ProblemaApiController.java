@@ -8,8 +8,10 @@ import com.delrey.peca.PecaRepository;
 import com.delrey.problema.Problema;
 import com.delrey.problema.ProblemaRepository;
 import com.delrey.troca.TrocaRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -113,6 +115,10 @@ public class ProblemaApiController {
     @PutMapping("/{id}")
     public ProblemaDto atualizar(@PathVariable Long id, @RequestBody ProblemaInput req) {
         Problema p = problemaRepository.findById(id).orElseThrow();
+        Carro carroUsuario = userContextService.getCarroDoUsuarioAtual();
+        if (!p.getCarro().getId().equals(carroUsuario.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado ao recurso");
+        }
         if (req.titulo() != null) p.setTitulo(req.titulo());
         if (req.sintoma() != null) p.setSintoma(req.sintoma());
         if (req.dataInicio() != null) p.setDataInicio(req.dataInicio());
@@ -135,6 +141,11 @@ public class ProblemaApiController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
+        Problema p = problemaRepository.findById(id).orElseThrow();
+        Carro carroUsuario = userContextService.getCarroDoUsuarioAtual();
+        if (!p.getCarro().getId().equals(carroUsuario.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado ao recurso");
+        }
         problemaRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }

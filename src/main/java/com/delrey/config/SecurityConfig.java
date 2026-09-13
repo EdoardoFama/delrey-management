@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -27,6 +28,12 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private final RateLimitingFilter rateLimitingFilter;
+
+    public SecurityConfig(RateLimitingFilter rateLimitingFilter) {
+        this.rateLimitingFilter = rateLimitingFilter;
+    }
 
     @Value("${app.users.admin.username:delrey}")
     private String adminUsername;
@@ -103,6 +110,11 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .cors(Customizer.withDefaults())
+            .headers(headers -> headers
+                .frameOptions(frame -> frame.deny())
+                .xssProtection(Customizer.withDefaults())
+            )
+            .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/login", "/logout", "/health", "/api/health", "/", "/api/login", "/api/logout").permitAll()
                 .anyRequest().authenticated()
@@ -123,7 +135,7 @@ public class SecurityConfig {
                 .failureHandler((request, response, exception) -> {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.setContentType("application/json");
-                    response.getWriter().write("{\"error\":\"Invalid credentials\"}");
+                    response.getWriter().write("{\"error\":\"Credenciais inválidas\"}");
                 })
                 .permitAll()
             )

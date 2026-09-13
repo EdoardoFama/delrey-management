@@ -5,8 +5,10 @@ import com.delrey.carro.CarroRepository;
 import com.delrey.config.UserContextService;
 import com.delrey.hodometro.LeituraKm;
 import com.delrey.hodometro.LeituraKmRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -86,6 +88,10 @@ public class HodometroApiController {
     @PutMapping("/{id}")
     public LeituraDto atualizar(@PathVariable Long id, @RequestBody LeituraRequest req) {
         LeituraKm l = repo.findById(id).orElseThrow();
+        Carro carroUsuario = userContextService.getCarroDoUsuarioAtual();
+        if (!l.getCarro().getId().equals(carroUsuario.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado ao recurso");
+        }
         if (req.data() != null) l.setData(req.data());
         if (req.km() != null) l.setKm(req.km());
         l.setObservacoes(req.observacoes());
@@ -94,6 +100,11 @@ public class HodometroApiController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
+        LeituraKm l = repo.findById(id).orElseThrow();
+        Carro carroUsuario = userContextService.getCarroDoUsuarioAtual();
+        if (!l.getCarro().getId().equals(carroUsuario.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado ao recurso");
+        }
         repo.deleteById(id);
         return ResponseEntity.noContent().build();
     }

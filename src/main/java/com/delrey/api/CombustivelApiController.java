@@ -4,8 +4,10 @@ import com.delrey.carro.Carro;
 import com.delrey.combustivel.Abastecimento;
 import com.delrey.combustivel.AbastecimentoRepository;
 import com.delrey.config.UserContextService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -141,6 +143,10 @@ public class CombustivelApiController {
     @PutMapping("/{id}")
     public AbastecimentoDto atualizar(@PathVariable Long id, @RequestBody AbastecimentoRequest req) {
         Abastecimento a = repo.findById(id).orElseThrow();
+        Carro carroUsuario = userContextService.getCarroDoUsuarioAtual();
+        if (!a.getCarro().getId().equals(carroUsuario.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado ao recurso");
+        }
         if (req.data() != null) a.setData(req.data());
         a.setKm(req.km());
         if (req.litros() != null) a.setLitros(req.litros());
@@ -158,6 +164,11 @@ public class CombustivelApiController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
+        Abastecimento a = repo.findById(id).orElseThrow();
+        Carro carroUsuario = userContextService.getCarroDoUsuarioAtual();
+        if (!a.getCarro().getId().equals(carroUsuario.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado ao recurso");
+        }
         repo.deleteById(id);
         return ResponseEntity.noContent().build();
     }
