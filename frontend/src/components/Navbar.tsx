@@ -17,6 +17,21 @@ const links = [
 ]
 
 export default function Navbar() {
+  const handleLogout = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+      await fetch(`${base}/api/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } catch {
+      // Continua para o redirect mesmo se a rede falhar
+    } finally {
+      window.location.href = '/login?logout'
+    }
+  }
+
   return (
     <nav className="border-b border-purple-900/40 bg-[#0d0d1a]">
       <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
@@ -45,7 +60,7 @@ export default function Navbar() {
             </NavLink>
           ))}
 
-          <form method="post" action="/logout" className="ml-3">
+          <form onSubmit={handleLogout} className="ml-3">
             <button
               type="submit"
               className="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-red-400 hover:bg-red-400/10 transition-colors"

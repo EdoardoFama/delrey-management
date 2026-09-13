@@ -12,37 +12,32 @@ Controle completo de gastos, peças, serviços, combustível, hodômetro e muito
 | Backend | Java 21 + Spring Boot 3.3 |
 | Persistência | Spring Data JPA + Flyway |
 | Banco (dev) | H2 em modo arquivo (compatibilidade PostgreSQL) |
-| Banco (prod) | PostgreSQL via Railway |
+| Banco (prod) | PostgreSQL (Neon.tech, Koyeb Postgres ou Supabase) |
 | Frontend | React 18 + TypeScript + Vite |
 | Estilo | Tailwind CSS (dark mode, tema roxo) |
-| Segurança | Spring Security — autenticação por usuário/senha via variáveis de ambiente |
-| Deploy | Docker multi-stage → Railway |
+| Segurança | Spring Security — autenticação por sessão com suporte a CORS e Vercel Proxy |
+| Deploy Backend | Docker multi-stage → Koyeb |
+| Deploy Frontend | Vercel (SPA com rewrites transparentes) |
 
 ---
 
 ## Rodando localmente
 
+### 1. Backend (Spring Boot)
 ```powershell
-# Backend + frontend (Maven faz o build do Vite automaticamente)
 mvn spring-boot:run
 ```
-
-Acesse: [http://localhost:8080](http://localhost:8080)
-
+Acesse a API: [http://localhost:8080](http://localhost:8080)  
 Console H2: [http://localhost:8080/h2-console](http://localhost:8080/h2-console)  
 JDBC URL: `jdbc:h2:file:./data/delrey` · Usuário: `sa` · Senha: _(vazio)_
 
-### Variáveis de ambiente necessárias em produção
-
+### 2. Frontend (Vite)
+```powershell
+cd frontend
+npm install
+npm run dev
 ```
-APP_ADMIN_USER=admin
-APP_ADMIN_PASS=senha_bcrypt
-APP_KAIO_USER=kaio
-APP_KAIO_PASS=senha_bcrypt
-SPRING_DATASOURCE_URL=jdbc:postgresql://host:5432/db
-SPRING_DATASOURCE_USERNAME=usuario
-SPRING_DATASOURCE_PASSWORD=senha
-```
+Acesse a aplicação: [http://localhost:5173](http://localhost:5173) (as requisições para `/api` são redirecionadas automaticamente para o backend local).
 
 ---
 
@@ -234,3 +229,79 @@ delrey-management/
 | V5 | Peças e compras iniciais (Mercado Livre — valores em aberto) |
 | V6 | Campo `km` nullable na tabela troca |
 | V7 | Tabelas `leitura_km` e `abastecimento` |
+
+---
+
+## Guia de Deploy (Koyeb + Vercel)
+
+A nova arquitetura separa o **Backend (Koyeb)** do **Frontend (Vercel)**, aproveitando os planos 100% gratuitos de cada plataforma.
+
+### Passo 1: Criar o Banco PostgreSQL Gratuito
+Você pode usar qualquer provedor PostgreSQL gratuito na nuvem:
+- **[Neon.tech](https://neon.tech)** (Recomendado — Serverless Postgres gratuito, rápido e sem expiração)
+- **[Supabase](https://supabase.com)** (Projeto gratuito com PostgreSQL)
+- **Koyeb Postgres** (disponível direto no painel do Koyeb)
+
+Copie a connection string gerada (exemplo: `postgres://usuario:senha@ep-xyz.region.neon.tech/delrey?sslmode=require`).
+
+---
+
+### Passo 2: Deploy do Backend no Koyeb
+
+1. Crie uma conta no [Koyeb](https://www.koyeb.com).
+2. Clique em **Create App** e selecione **GitHub**.
+3. Escolha o repositório `delrey_management`.
+4. Em **Builder**, selecione **Dockerfile** (o repositório já possui um `Dockerfile` otimizado para o Koyeb).
+5. Defina as **Environment Variables**:
+
+| Variável | Exemplo de Valor | Descrição |
+|----------|------------------|-----------|
+| `SPRING_PROFILES_ACTIVE` | `prod` | Ativa o perfil de produção com PostgreSQL |
+| `DATABASE_URL` | `postgres://user:pass@host:5432/db?sslmode=require` | Connection string do seu PostgreSQL |
+| `APP_ADMIN_USERNAME` | `delrey` | Usuário de login do administrador |
+| `APP_ADMIN_PASSWORD` | `sua_senha_forte` | Senha de login do administrador |
+| `APP_KAIO_USERNAME` | `kaiolucas` | Segundo usuário de acesso |
+| `APP_KAIO_PASSWORD` | `outra_senha_forte` | Senha do segundo usuário |
+| `CORS_ALLOWED_ORIGINS` | `https://*.vercel.app,http://localhost:5173` | Domínios autorizados |
+
+6. Em **Health Checks**:
+   - Tipo: **HTTP**
+   - Caminho: `/api/health`
+   - Porta: `8080`
+7. Clique em **Deploy**.
+8. Ao finalizar, copie a URL pública gerada pelo Koyeb (ex: `https://delrey-backend-seu-user.koyeb.app`). Teste acessando no navegador — você verá a mensagem `{"status":"UP", ...}`.
+
+---
+
+### Passo 3: Deploy do Frontend na Vercel
+
+1. Abra o arquivo [frontend/vercel.json](file:///c:/Projetos_pessoais_DEV_ATUAL/delrey_management/frontend/vercel.json) e o arquivo da raiz [vercel.json](file:///c:/Projetos_pessoais_DEV_ATUAL/delrey_management/vercel.json).
+2. Substitua `https://YOUR_KOYEB_BACKEND_URL` pela URL pública que você copiou do Koyeb no Passo 2:
+```json
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://delrey-backend-seu-user.koyeb.app/api/:path*"
+    },
+    {
+      "source": "/((?!api).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+```
+3. Faça commit e push dessas alterações no GitHub:
+```bash
+git add .
+git commit -m "chore: configurar url do backend koyeb"
+git push
+```
+4. Crie uma conta na [Vercel](https://vercel.com).
+5. Clique em **Add New Project** e importe o repositório do GitHub.
+6. Em **Framework Preset**, a Vercel detectará **Vite**.
+7. Em **Root Directory**, selecione a pasta `frontend` (ou deixe na raiz, pois o repositório já inclui o `vercel.json` na raiz configurado para compilar a pasta `frontend`).
+8. Clique em **Deploy**.
+
+Pronto! Acesse o domínio da Vercel (ex: `https://delrey-management.vercel.app`). Todas as chamadas para `/api/*` e o login passarão pelo proxy transparente da Vercel, mantendo os cookies de sessão seguros sem problemas de CORS ou bloqueios de navegadores.
+

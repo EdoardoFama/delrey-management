@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}
-    username: ${PGUSER}
-    password: ${PGPASSWORD}
+    url: ${SPRING_DATASOURCE_URL:${DATABASE_URL:jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:delrey}}}
+    username: ${SPRING_DATASOURCE_USERNAME:${PGUSER:postgres}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${PGPASSWORD:}}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -18,12 +18,21 @@ spring:
 
 server:
   port: ${PORT:8080}
+  servlet:
+    session:
+      cookie:
+        same-site: ${COOKIE_SAME_SITE:lax}
+        secure: ${COOKIE_SECURE:true}
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,https://*.vercel.app}
 
 app:
+  upload-dir: ${APP_UPLOAD_DIR:./uploads}
   users:
     admin:
-      username: ${APP_ADMIN_USERNAME}
-      password: ${APP_ADMIN_PASSWORD}
+      username: ${APP_ADMIN_USERNAME:${APP_ADMIN_USER:delrey}}
+      password: ${APP_ADMIN_PASSWORD:${APP_ADMIN_PASS:delrey123}}
     kaio:
-      username: ${APP_KAIO_USERNAME}
-      password: ${APP_KAIO_PASSWORD}
+      username: ${APP_KAIO_USERNAME:${APP_KAIO_USER:kaiolucas}}
+      password: ${APP_KAIO_PASSWORD:${APP_KAIO_PASS:aecproblematica}}

@@ -1,0 +1,17 @@
+name: delrey-management
+services:
+  - name: delrey-backend
+    type: web
+    dockerfile:
+      dockerfile: Dockerfile
+    ports:
+      - port: 8080
+        path: /
+        protocol: http
+    health_checks:
+      - http:
+          path: /api/health
+          port: 8080
+    env:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod

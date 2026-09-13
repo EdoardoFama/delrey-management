@@ -1,4 +1,4 @@
-const base = ''
+const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(base + path, {
@@ -59,7 +59,7 @@ export const api = {
     form.append('file', file)
     form.append('trocaId', String(trocaId))
     if (descricao) form.append('descricao', descricao)
-    const res = await fetch('/api/anexos', { method: 'POST', credentials: 'include', body: form })
+    const res = await fetch(`${base}/api/anexos`, { method: 'POST', credentials: 'include', body: form })
     if (res.status === 401) { window.location.href = '/login'; throw new Error('Não autenticado') }
     if (!res.ok) throw new Error(`Erro ${res.status}`)
     return res.json()
@@ -67,7 +67,7 @@ export const api = {
   uploadCarroFoto: async (file: File) => {
     const form = new FormData()
     form.append('file', file)
-    const res = await fetch('/api/carro/foto', { method: 'POST', credentials: 'include', body: form })
+    const res = await fetch(`${base}/api/carro/foto`, { method: 'POST', credentials: 'include', body: form })
     if (res.status === 401) { window.location.href = '/login'; throw new Error('Não autenticado') }
     if (!res.ok) throw new Error(`Erro ${res.status}`)
     return res.json()
