@@ -50,6 +50,7 @@ export default function Servicos() {
   const [ordenacao, setOrdenacao] = useState('data-desc')
   const [filtroAno, setFiltroAno] = useState<string>('')
   const [filtroMes, setFiltroMes] = useState<string>('')
+  const [buscaTexto, setBuscaTexto] = useState('')
 
   useEffect(() => {
     Promise.all([api.getTrocas('SERVICO'), api.getPecas(), api.getCategorias()]).then(([s, p, cats]) => {
@@ -127,6 +128,7 @@ export default function Servicos() {
 
   const listaFiltrada = useMemo(() => {
     let lista = [...servicos]
+    if (buscaTexto) lista = lista.filter(s => s.pecaNome.toLowerCase().includes(buscaTexto.toLowerCase()))
     if (filtroCategoria) lista = lista.filter(s => s.categoriaNome === filtroCategoria)
     if (filtroAno) lista = lista.filter(s => s.dataTroca.startsWith(filtroAno))
     if (filtroMes) lista = lista.filter(s => s.dataTroca.slice(5, 7) === filtroMes.padStart(2, '0'))
@@ -139,7 +141,7 @@ export default function Servicos() {
       case 'valor-desc': lista.sort((a, b) => ((b.valor ?? 0) + (b.maoDeObra ?? 0)) - ((a.valor ?? 0) + (a.maoDeObra ?? 0))); break
     }
     return lista
-  }, [servicos, filtroCategoria, filtroAno, filtroMes, ordenacao])
+  }, [servicos, filtroCategoria, filtroAno, filtroMes, ordenacao, buscaTexto])
 
   if (loading) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
 
@@ -230,9 +232,17 @@ export default function Servicos() {
         </div>
       )}
 
-      {/* Filtros */}
+      {/* Filtros e Busca */}
       {servicos.length > 0 && (
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex flex-col gap-3">
+          <input
+            type="search"
+            value={buscaTexto}
+            onChange={(e) => setBuscaTexto(e.target.value)}
+            placeholder="Buscar serviço por nome da peça/sistema..."
+            className="w-full bg-[#16162a] border border-purple-900/40 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/50 placeholder-gray-600 transition-colors"
+          />
+          <div className="flex flex-wrap gap-2 items-center">
           <select
             value={filtroAno}
             onChange={e => setFiltroAno(e.target.value)}
@@ -275,19 +285,20 @@ export default function Servicos() {
             <option value="valor-desc">Valor total (maior)</option>
             <option value="valor-asc">Valor total (menor)</option>
           </select>
-          {(filtroCategoria || filtroAno || filtroMes || ordenacao !== 'data-desc') && (
+          {(filtroCategoria || filtroAno || filtroMes || buscaTexto || ordenacao !== 'data-desc') && (
             <button
-              onClick={() => { setFiltroCategoria(''); setFiltroAno(''); setFiltroMes(''); setOrdenacao('data-desc') }}
+              onClick={() => { setFiltroCategoria(''); setFiltroAno(''); setFiltroMes(''); setOrdenacao('data-desc'); setBuscaTexto('') }}
               className="text-xs text-gray-500 hover:text-white px-3 py-2 rounded-lg border border-gray-800 hover:border-gray-600 transition-colors"
             >
               Limpar filtros
             </button>
           )}
-          {(filtroCategoria || filtroAno || filtroMes) && (
+          {(filtroCategoria || filtroAno || filtroMes || buscaTexto) && (
             <span className="text-xs text-gray-500 ml-1">
               {listaFiltrada.length} de {servicos.length} itens
             </span>
           )}
+          </div>
         </div>
       )}
 
