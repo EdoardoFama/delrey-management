@@ -11,7 +11,7 @@ function parseCSV(csv: string) {
     const line = lines[i]
     if (!line) continue
 
-    const values = []
+    const values: string[] = []
     let inQuotes = false
     let currentVal = ''
     
