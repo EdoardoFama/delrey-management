@@ -36,3 +36,6 @@ app:
     kaio:
       username: ${APP_KAIO_USERNAME:${APP_KAIO_USER:kaiolucas}}
       password: ${APP_KAIO_PASSWORD:${APP_KAIO_PASS:aecproblematica}}
+    monza:
+      username: ${APP_MONZA_USERNAME:${APP_MONZA_USER:monza}}
+      password: ${APP_MONZA_PASSWORD:${APP_MONZA_PASS:monza123}}

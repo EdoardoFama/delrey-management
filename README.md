@@ -262,6 +262,8 @@ Copie a connection string gerada (exemplo: `postgres://usuario:senha@ep-xyz.regi
 | `APP_ADMIN_PASSWORD` | `sua_senha_forte` | Senha de login do administrador |
 | `APP_KAIO_USERNAME` | `kaiolucas` | Segundo usuário de acesso |
 | `APP_KAIO_PASSWORD` | `outra_senha_forte` | Senha do segundo usuário |
+| `APP_MONZA_USERNAME` | `monza` | Terceiro usuário de acesso |
+| `APP_MONZA_PASSWORD` | `senha_do_monza` | Senha do terceiro usuário |
 | `CORS_ALLOWED_ORIGINS` | `https://*.vercel.app,http://localhost:5173` | Domínios autorizados |
 
 6. Em **Health Checks**:

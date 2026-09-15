@@ -1,0 +1,170 @@
+{
+  "project": {
+    "name": "Del Rey Management",
+    "description": "Sistema pessoal de gestão e manutenção do Ford Del Rey 1990 AP 1.8 Ghia. Controle completo de gastos, peças, serviços, combustível, hodômetro e muito mais.",
+    "repository": "https://github.com/EdoardoFama/delrey-management",
+    "local_path": "c:\\Projetos_pessoais_DEV_ATUAL\\delrey_management"
+  },
+
+  "infrastructure": {
+    "backend": {
+      "platform": "Render.com",
+      "service_name": "delrey-management",
+      "type": "Web Service (Docker)",
+      "plan": "Free (512MB RAM, 0.1 CPU, sleeps after inactivity)",
+      "port": 8080,
+      "health_check": "/api/health",
+      "auto_deploy": true,
+      "branch": "main"
+    },
+    "frontend": {
+      "platform": "Vercel",
+      "status": "pendente - ainda não foi feito o deploy na Vercel",
+      "root_dir": "frontend",
+      "build_command": "npm run build",
+      "output_dir": "frontend/dist",
+      "rewrites": {
+        "api": "/api/:path* -> <RENDER_URL>/api/:path*",
+        "spa": "/* -> /index.html"
+      }
+    },
+    "database": {
+      "platform": "Supabase",
+      "plan": "Free",
+      "project_ref": "dmzzqteckgowlthwpfmz",
+      "project_url": "https://dmzzqteckgowlthwpfmz.supabase.co",
+      "region": "ca-central-1 (Canada)",
+      "db_name": "postgres",
+      "db_user": "postgres",
+      "db_host_direct": "db.dmzzqteckgowlthwpfmz.supabase.co:5432 (IPv6 - NÃO usar com Render)",
+      "db_host_pooler": "aws-0-ca-central-1.pooler.supabase.com:5432 (IPv4 Session Pooler - usar este)",
+      "connection_string_template": "postgresql://postgres.dmzzqteckgowlthwpfmz:<SENHA>@aws-0-ca-central-1.pooler.supabase.com:5432/postgres",
+      "obs": "Senha contém * que quebra java.net.URI. Usar Regex parser customizado no DataSourceConfig."
+    }
+  },
+
+  "stack": {
+    "backend": {
+      "language": "Java 21",
+      "framework": "Spring Boot 3.3.4",
+      "persistence": "Spring Data JPA + Flyway (7 migrations V1-V7)",
+      "security": "Spring Security (form login via /api/login, logout via /api/logout, sessão com cookie JSESSIONID)",
+      "db_dev": "H2 em modo arquivo: jdbc:h2:file:./data/delrey - console em /h2",
+      "db_prod": "PostgreSQL via Supabase (Session Pooler IPv4)",
+      "build_tool": "Maven",
+      "packaging": "JAR fat via spring-boot-maven-plugin"
+    },
+    "frontend": {
+      "framework": "React 18",
+      "language": "TypeScript",
+      "bundler": "Vite 5",
+      "styling": "Tailwind CSS 3 (dark mode, tema roxo #0a0a12)",
+      "router": "react-router-dom v6",
+      "api_client": "fetch nativo com wrapper em frontend/src/api/client.ts",
+      "auth": "Cookie de sessão (JSESSIONID) via /api/login POST form-urlencoded"
+    }
+  },
+
+  "env_vars_render": {
+    "SPRING_PROFILES_ACTIVE": "prod",
+    "DATABASE_URL": "postgresql://postgres.dmzzqteckgowlthwpfmz:<SENHA>@aws-0-ca-central-1.pooler.supabase.com:5432/postgres",
+    "APP_ADMIN_USERNAME": "delrey",
+    "APP_ADMIN_PASSWORD": "<a definir>",
+    "APP_KAIO_USERNAME": "kaiolucas",
+    "APP_KAIO_PASSWORD": "<a definir>",
+    "obs": "DATABASE_URL usa Session Pooler IPv4 + sslmode=require adicionado automaticamente pelo DataSourceConfig"
+  },
+
+  "key_files": {
+    "backend": {
+      "Dockerfile": "Build Maven puro (sem Node), imagem eclipse-temurin:21-jre-alpine, EXPOSE 8080, perfil prod",
+      "application.yml": "Perfil dev: H2 local, porta 8080, console H2 em /h2",
+      "application-prod.yml": "Perfil prod: PostgreSQL via env vars com fallbacks, porta via ${PORT:8080}, CORS e cookies configurados",
+      "SecurityConfig.java": "CORS habilitado (allowedOriginPatterns de CORS_ALLOWED_ORIGINS env var), /api/login e /api/logout como endpoints REST JSON, /api/health público",
+      "DataSourceConfig.java": "CRITICAL: usa Regex (não java.net.URI) para parsear DATABASE_URL pois senhas com * quebram o URI parser do Java. Adiciona sslmode=require automaticamente.",
+      "HealthApiController.java": "GET /api/health e GET / -> 200 OK com JSON de status (para health check do Render)",
+      "SpaController.java": "Redireciona rotas do SPA para /index.html quando servindo frontend embutido (não usado no modo separado Vercel)"
+    },
+    "frontend": {
+      "vercel.json": "Na pasta frontend/ e na raiz. Rewrites: /api/:path* -> Render backend, /* -> /index.html",
+      "vite.config.ts": "Dev proxy: /api e /login e /logout -> localhost:8080",
+      "client.ts": "fetch wrapper. base = VITE_API_URL || '' (relativo para Vercel proxy funcionar)",
+      "Login.tsx": "Submissão async via fetch POST /api/login com Content-Type form-urlencoded. Redireciona para / em sucesso.",
+      "Navbar.tsx": "Logout async via fetch POST /api/logout. Redireciona para /login?logout",
+      "vite-env.d.ts": "Declarações TypeScript para import.meta.env.VITE_API_URL"
+    }
+  },
+
+  "flyway_migrations": {
+    "V1": "Schema base: carro, categoria_peca, peca, troca, anexo, problema",
+    "V2": "Seed: Del Rey AP 1.8 + 12 categorias + ~60 peças típicas",
+    "V3": "Campos cor e foto_path na tabela carro",
+    "V4": "Campo tipo (COMPRA/SERVICO) na tabela troca",
+    "V5": "Peças e compras iniciais do Mercado Livre",
+    "V6": "Campo km nullable na tabela troca",
+    "V7": "Tabelas leitura_km e abastecimento"
+  },
+
+  "api_routes": {
+    "auth": ["POST /api/login", "POST /api/logout"],
+    "health": ["GET /api/health", "GET /"],
+    "carro": ["GET /api/carro", "PUT /api/carro", "POST /api/carro/foto"],
+    "trocas": ["GET /api/trocas", "POST /api/trocas", "PUT /api/trocas/{id}", "DELETE /api/trocas/{id}"],
+    "pecas": ["GET /api/pecas", "GET /api/pecas/{id}", "POST /api/pecas", "PUT /api/pecas/{id}", "GET /api/pecas/categorias"],
+    "combustivel": ["GET /api/combustivel", "POST /api/combustivel", "PUT /api/combustivel/{id}", "DELETE /api/combustivel/{id}"],
+    "hodometro": ["GET /api/hodometro", "POST /api/hodometro", "PUT /api/hodometro/{id}", "DELETE /api/hodometro/{id}"],
+    "alertas": ["GET /api/alertas/manutencao", "GET /api/alertas/garantia"],
+    "problemas": ["GET /api/problemas", "POST /api/problemas", "PUT /api/problemas/{id}", "DELETE /api/problemas/{id}"],
+    "anexos": ["GET /api/anexos?trocaId={id}", "POST /api/anexos", "GET /api/anexos/{id}/download", "DELETE /api/anexos/{id}"],
+    "dashboard": ["GET /api/dashboard?ano=&mes="],
+    "projecao": ["GET /api/projecao"],
+    "export": ["GET /api/export/csv", "GET /api/export/json"]
+  },
+
+  "frontend_pages": [
+    "/             -> Dashboard (cards resumo, donut charts, ranking fornecedores, últimas intervenções)",
+    "/compras      -> Compras de peças com filtros, edição, exclusão e anexos",
+    "/servicos     -> Serviços (mão de obra) com filtros, edição, exclusão e anexos",
+    "/pecas        -> Catálogo de peças com busca",
+    "/pecas/:id    -> Detalhe de peça com histórico de trocas",
+    "/combustivel  -> Abastecimentos com consumo km/L automático",
+    "/hodometro    -> Leituras de KM com ritmo de uso",
+    "/alertas      -> Alertas de manutenção por status (Atrasado/Próximo/OK/Sem registro)",
+    "/garantia     -> Garantias ativas com dias restantes",
+    "/projecao     -> Projeção de gastos 3/6/12 meses",
+    "/problemas    -> Diário de problemas e sintomas",
+    "/timeline     -> Timeline agrupada por mês/ano",
+    "/relatorio    -> Dossiê completo com export CSV e JSON",
+    "/carro        -> Ficha do veículo com upload de foto",
+    "/login        -> Tela de login"
+  ],
+
+  "deploy_status": {
+    "supabase": "CONCLUÍDO",
+    "render_backend": "EM ANDAMENTO - último erro: SSL handshake (sslmode=require adicionado, aguardando novo deploy)",
+    "vercel_frontend": "PENDENTE - aguardar URL pública do Render para preencher no vercel.json",
+    "next_steps": [
+      "1. Aguardar Render subir com o fix de SSL (commit d83af00)",
+      "2. Copiar URL pública do Render (ex: https://delrey-management.onrender.com)",
+      "3. Editar frontend/vercel.json e vercel.json na raiz: substituir YOUR_KOYEB_BACKEND_URL pela URL do Render",
+      "4. git add . ; git commit -m 'feat: configurar url backend render no vercel.json' ; git push",
+      "5. Criar conta na Vercel (vercel.com), importar repositório EdoardoFama/delrey-management, Root Directory: frontend, Deploy!"
+    ]
+  },
+
+  "known_issues_and_solutions": {
+    "DATABASE_URL com * na senha quebra java.net.URI": "Solução: Regex customizado no DataSourceConfig.java em vez de new URI()",
+    "Supabase host direto (db.xxx.supabase.co) usa IPv6": "Solução: Usar Session Pooler IPv4 (aws-0-ca-central-1.pooler.supabase.com:5432)",
+    "Supabase exige SSL obrigatório": "Solução: DataSourceConfig adiciona ?sslmode=require automaticamente na JDBC URL",
+    "Render usa porta dinâmica via PORT env var": "Solução: server.port: ${PORT:8080} no application-prod.yml",
+    "JSESSIONID bloqueado em cross-site": "Solução: Usar Vercel Rewrites como proxy transparente (vercel.json) para manter cookie first-party",
+    "Login era form HTML nativo": "Solução: Login.tsx reescrito para fetch async POST /api/login com form-urlencoded",
+    "SpaController não era necessário no modo separado": "Permanece no código mas inativo (o SPA routing é feito pelo vercel.json no frontend separado)"
+  },
+
+  "local_dev": {
+    "backend": "mvn spring-boot:run (porta 8080, banco H2 em ./data/delrey)",
+    "frontend": "cd frontend && npm run dev (porta 5173, proxy /api -> 8080 via vite.config.ts)",
+    "h2_console": "http://localhost:8080/h2 | URL: jdbc:h2:file:./data/delrey | User: sa | Pass: (vazio)"
+  }
+}

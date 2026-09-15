@@ -62,6 +62,12 @@ public class SecurityConfig {
     @Value("${app.users.tigo5x.password:tigo5x123}")
     private String tigoPassword;
 
+    @Value("${app.users.monza.username:monza}")
+    private String monzaUsername;
+
+    @Value("${app.users.monza.password:monza123}")
+    private String monzaPassword;
+
     @Value("${cors.allowed-origins:http://localhost:5173,http://localhost:3000,https://*.vercel.app}")
     private String allowedOrigins;
 
@@ -92,7 +98,12 @@ public class SecurityConfig {
                 .roles("USER")
                 .build();
 
-        return new InMemoryUserDetailsManager(admin, kaio, tigo);
+        var monza = User.withUsername(monzaUsername)
+                .password(encoder.encode(monzaPassword))
+                .roles("USER")
+                .build();
+
+        return new InMemoryUserDetailsManager(admin, kaio, tigo, monza);
     }
 
     @Bean

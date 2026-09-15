@@ -36,6 +36,9 @@ app:
     kaio:
       username: kaiolucas
       password: aecproblematica
+    monza:
+      username: monza
+      password: monza123
 
 logging:
   level:
