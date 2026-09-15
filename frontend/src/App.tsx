@@ -15,6 +15,7 @@ import Combustivel from './pages/Combustivel'
 import Projecao from './pages/Projecao'
 import Problemas from './pages/Problemas'
 import Relatorio from './pages/Relatorio'
+import Glossario from './pages/Glossario'
 
 function Layout() {
   const { pathname } = useLocation()
@@ -39,6 +40,7 @@ function Layout() {
           <Route path="/projecao" element={<Projecao />} />
           <Route path="/problemas" element={<Problemas />} />
           <Route path="/relatorio" element={<Relatorio />} />
+          <Route path="/glossario" element={<Glossario />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

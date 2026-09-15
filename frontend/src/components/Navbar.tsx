@@ -13,6 +13,7 @@ const links = [
   { to: '/timeline', label: 'Timeline' },
   { to: '/relatorio', label: 'Dossiê' },
   { to: '/carro', label: 'Meu Carro' },
+  { to: '/glossario', label: 'Glossário Carros' },
 ]
 
 export default function Navbar() {
