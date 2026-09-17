@@ -4,6 +4,7 @@ import type { Abastecimento, CombustivelResumo } from '../types'
 
 const inputCls = 'w-full bg-[#0a0a12] border border-purple-900/40 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 transition-colors'
 const labelCls = 'block text-xs text-gray-500 mb-1'
+const selectCls = 'bg-[#16162a] border border-purple-900/40 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 transition-colors'
 
 function formatBRL(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -15,8 +16,8 @@ function formatDate(d: string) {
 interface Form {
   data: string
   km: string
+  kmAndados: string
   litros: string
-  valorLitro: string
   valorTotal: string
   tipoCombustivel: string
   posto: string
@@ -27,8 +28,8 @@ interface Form {
 const emptyForm = (): Form => ({
   data: new Date().toISOString().split('T')[0],
   km: '',
+  kmAndados: '',
   litros: '',
-  valorLitro: '',
   valorTotal: '',
   tipoCombustivel: 'Gasolina',
   posto: '',
@@ -45,39 +46,39 @@ export default function Combustivel() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editForm, setEditForm] = useState<Form | null>(null)
 
+  // Filtros
+  const [filtroMes, setFiltroMes] = useState<string>('')
+  const [filtroAno, setFiltroAno] = useState<string>(String(new Date().getFullYear()))
+  const [filtroPosto, setFiltroPosto] = useState<string>('')
+  const [filtroTipo, setFiltroTipo] = useState<string>('')
+
   function recarregar() {
     setLoading(true)
-    api.getCombustivel().then(r => {
+    api.getCombustivel(
+      filtroAno ? Number(filtroAno) : undefined,
+      filtroMes ? Number(filtroMes) : undefined,
+      filtroPosto || undefined,
+      filtroTipo || undefined
+    ).then(r => {
       setResumo(r as CombustivelResumo)
       setLoading(false)
     })
   }
 
-  useEffect(() => { recarregar() }, [])
+  useEffect(() => { recarregar() }, [filtroAno, filtroMes, filtroPosto, filtroTipo])
 
-  // calcula valorTotal automaticamente quando litros ou valorLitro mudam
-  function atualizarForm(setter: (f: Form) => Form) {
-    setForm(prev => {
-      const novo = setter(prev)
-      const l = parseFloat(novo.litros)
-      const vl = parseFloat(novo.valorLitro)
-      if (!isNaN(l) && !isNaN(vl)) {
-        novo.valorTotal = (l * vl).toFixed(2)
-      }
-      return novo
-    })
-  }
+  const isPrimeiroAbastecimento = resumo?.abastecimentos.length === 0
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.litros || !form.valorLitro) return
+    if (!form.valorTotal) return
     setSaving(true)
     await api.createAbastecimento({
-      data: form.data,
+      data: form.data || null,
       km: form.km ? Number(form.km) : null,
-      litros: Number(form.litros),
-      valorLitro: Number(form.valorLitro),
-      valorTotal: Number(form.valorTotal) || Number(form.litros) * Number(form.valorLitro),
+      kmAndados: form.kmAndados ? Number(form.kmAndados) : null,
+      litros: form.litros ? Number(form.litros) : null,
+      valorTotal: Number(form.valorTotal),
       tipoCombustivel: form.tipoCombustivel || null,
       posto: form.posto || null,
       tanqueCheio: form.tanqueCheio,
@@ -90,14 +91,14 @@ export default function Combustivel() {
   }
 
   async function handleSaveEdit(id: number) {
-    if (!editForm) return
+    if (!editForm || !editForm.valorTotal) return
     setSaving(true)
     await api.updateAbastecimento(id, {
-      data: editForm.data,
+      data: editForm.data || null,
       km: editForm.km ? Number(editForm.km) : null,
-      litros: Number(editForm.litros),
-      valorLitro: Number(editForm.valorLitro),
-      valorTotal: Number(editForm.valorTotal) || Number(editForm.litros) * Number(editForm.valorLitro),
+      kmAndados: editForm.kmAndados ? Number(editForm.kmAndados) : null,
+      litros: editForm.litros ? Number(editForm.litros) : null,
+      valorTotal: Number(editForm.valorTotal),
       tipoCombustivel: editForm.tipoCombustivel || null,
       posto: editForm.posto || null,
       tanqueCheio: editForm.tanqueCheio,
@@ -115,7 +116,7 @@ export default function Combustivel() {
     recarregar()
   }
 
-  if (loading || !resumo) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
+  if (loading && !resumo) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
 
   return (
     <div className="space-y-6">
@@ -133,52 +134,101 @@ export default function Combustivel() {
       </div>
 
       {/* Resumo */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">
-          <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Consumo médio</p>
-          <p className="text-2xl font-bold text-cyan-400">
-            {resumo.consumoMedio > 0 ? `${resumo.consumoMedio.toFixed(2)} km/L` : '—'}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">Entre tanques cheios</p>
+      {resumo && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">
+            <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Total Gasto</p>
+            <p className="text-2xl font-bold text-purple-400">{formatBRL(resumo.gastoTotal)}</p>
+            <p className="text-xs text-gray-500 mt-1">No período selecionado</p>
+          </div>
+          <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">
+            <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Consumo médio</p>
+            <p className="text-2xl font-bold text-cyan-400">
+              {resumo.consumoMedio > 0 ? `${resumo.consumoMedio.toFixed(2)} km/L` : '—'}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">Entre tanques cheios</p>
+          </div>
+          <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">
+            <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">KM Calculado</p>
+            <p className="text-2xl font-bold text-white">
+              {resumo.kmAtualCalculado != null ? `${resumo.kmAtualCalculado.toLocaleString('pt-BR')} km` : '—'}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">Acumulado</p>
+          </div>
+          <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">
+            <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Preço médio L</p>
+            <p className="text-2xl font-bold text-white">
+              {resumo.valorLitroMedio > 0 ? formatBRL(resumo.valorLitroMedio) : '—'}
+            </p>
+            {resumo.totalLitros > 0 && (
+              <p className="text-xs text-gray-500 mt-1">{resumo.totalLitros.toFixed(2)} L abastecidos</p>
+            )}
+          </div>
         </div>
-        <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">
-          <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Gasto total</p>
-          <p className="text-2xl font-bold text-purple-400">{formatBRL(resumo.gastoTotal)}</p>
-        </div>
-        <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">
-          <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Preço médio L</p>
-          <p className="text-2xl font-bold text-white">
-            {resumo.valorLitroMedio > 0 ? formatBRL(resumo.valorLitroMedio) : '—'}
-          </p>
-        </div>
-        <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">
-          <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Litros totais</p>
-          <p className="text-2xl font-bold text-white">
-            {resumo.totalLitros.toFixed(2)} L
-          </p>
-          {resumo.totalKm != null && (
-            <p className="text-xs text-gray-500 mt-1">{resumo.totalKm.toLocaleString('pt-BR')} km percorridos</p>
+      )}
+
+      {/* Filtros */}
+      {resumo && (
+        <div className="flex flex-wrap gap-3 items-center bg-[#16162a] border border-purple-900/30 rounded-xl p-4">
+          <span className="text-sm font-semibold text-gray-400">Filtros:</span>
+          <select value={filtroAno} onChange={e => setFiltroAno(e.target.value)} className={selectCls}>
+            <option value="">Qualquer ano</option>
+            {/* Adiciona últimos 5 anos como opções */}
+            {Array.from({ length: 5 }).map((_, i) => {
+              const ano = new Date().getFullYear() - i;
+              return <option key={ano} value={ano}>{ano}</option>
+            })}
+          </select>
+          <select value={filtroMes} onChange={e => setFiltroMes(e.target.value)} className={selectCls}>
+            <option value="">Todos os meses</option>
+            {[
+              'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+              'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+            ].map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
+          </select>
+          {resumo.postos && resumo.postos.length > 0 && (
+            <select value={filtroPosto} onChange={e => setFiltroPosto(e.target.value)} className={selectCls}>
+              <option value="">Todos os postos</option>
+              {resumo.postos.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          )}
+          {resumo.tipos && resumo.tipos.length > 0 && (
+            <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)} className={selectCls}>
+              <option value="">Todos os combustíveis</option>
+              {resumo.tipos.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
           )}
         </div>
-      </div>
+      )}
 
       {/* Formulário */}
       {showForm && (
-        <div className="bg-[#16162a] border border-purple-500/30 rounded-xl p-6">
+        <div className="bg-[#16162a] border border-purple-500/30 rounded-xl p-6 transition-all">
           <h2 className="text-sm font-semibold text-purple-400 mb-4">Novo abastecimento</h2>
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className={labelCls}>Data *</label>
-                <input type="date" required value={form.data}
+                <label className={labelCls}>Data</label>
+                <input type="date" value={form.data}
                   onChange={e => setForm(p => ({ ...p, data: e.target.value }))} className={inputCls} />
               </div>
-              <div>
-                <label className={labelCls}>KM no momento</label>
-                <input type="number" value={form.km}
-                  onChange={e => setForm(p => ({ ...p, km: e.target.value }))}
-                  placeholder="ex: 152340" className={inputCls} />
-              </div>
+              
+              {isPrimeiroAbastecimento ? (
+                <div>
+                  <label className={labelCls}>KM Total do Carro (Hodômetro)</label>
+                  <input type="number" value={form.km}
+                    onChange={e => setForm(p => ({ ...p, km: e.target.value }))}
+                    placeholder="ex: 152340" className={inputCls} />
+                </div>
+              ) : (
+                <div>
+                  <label className={labelCls}>KM andados desde o último</label>
+                  <input type="number" value={form.kmAndados}
+                    onChange={e => setForm(p => ({ ...p, kmAndados: e.target.value }))}
+                    placeholder="ex: 350" className={inputCls} />
+                </div>
+              )}
+
               <div>
                 <label className={labelCls}>Tipo</label>
                 <select value={form.tipoCombustivel}
@@ -191,23 +241,18 @@ export default function Combustivel() {
                 </select>
               </div>
               <div>
-                <label className={labelCls}>Litros *</label>
-                <input type="number" step="0.001" required value={form.litros}
-                  onChange={e => atualizarForm(p => ({ ...p, litros: e.target.value }))}
-                  placeholder="ex: 35,500" className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>R$ por litro *</label>
-                <input type="number" step="0.001" required value={form.valorLitro}
-                  onChange={e => atualizarForm(p => ({ ...p, valorLitro: e.target.value }))}
-                  placeholder="ex: 5,89" className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Valor total (R$)</label>
-                <input type="number" step="0.01" value={form.valorTotal}
+                <label className={labelCls}>Valor total (R$) *</label>
+                <input type="number" step="0.01" required value={form.valorTotal}
                   onChange={e => setForm(p => ({ ...p, valorTotal: e.target.value }))}
-                  placeholder="auto" className={inputCls} />
+                  placeholder="ex: 150.00" className={inputCls} />
               </div>
+              <div>
+                <label className={labelCls}>Litros (opcional)</label>
+                <input type="number" step="0.001" value={form.litros}
+                  onChange={e => setForm(p => ({ ...p, litros: e.target.value }))}
+                  placeholder="ex: 35.500" className={inputCls} />
+              </div>
+              
               <div>
                 <label className={labelCls}>Posto</label>
                 <input type="text" value={form.posto}
@@ -228,8 +273,15 @@ export default function Combustivel() {
                   onChange={e => setForm(p => ({ ...p, observacoes: e.target.value }))} className={inputCls} />
               </div>
             </div>
+            
+            {form.valorTotal && form.litros && (
+              <p className="text-xs text-purple-300 mt-2">
+                O valor do litro será calculado automaticamente: {formatBRL(Number(form.valorTotal) / Number(form.litros))} /L
+              </p>
+            )}
+
             <button type="submit" disabled={saving}
-              className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors">
+              className="mt-4 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors">
               {saving ? 'Salvando...' : 'Registrar abastecimento'}
             </button>
           </form>
@@ -237,13 +289,13 @@ export default function Combustivel() {
       )}
 
       {/* Lista */}
-      {resumo.abastecimentos.length === 0 ? (
+      {resumo && resumo.abastecimentos.length === 0 ? (
         <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-12 text-center">
           <p className="text-4xl mb-3">⛽</p>
-          <p className="text-gray-400">Nenhum abastecimento registrado ainda.</p>
+          <p className="text-gray-400">Nenhum abastecimento encontrado.</p>
           <p className="text-xs text-gray-500 mt-2">Registre com tanque cheio pra calcular o consumo médio.</p>
         </div>
-      ) : (
+      ) : resumo && (
         <div className="space-y-2">
           {resumo.abastecimentos.map((a: Abastecimento) => (
             <div key={a.id} className="bg-[#16162a] border border-purple-900/30 rounded-xl overflow-hidden">
@@ -252,7 +304,7 @@ export default function Combustivel() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-white font-medium">
-                        {Number(a.litros).toFixed(2)} L · {formatBRL(Number(a.valorTotal))}
+                        {formatBRL(Number(a.valorTotal))} {a.litros != null ? `· ${Number(a.litros).toFixed(2)} L` : ''}
                       </p>
                       {a.tipoCombustivel && (
                         <span className="text-xs bg-purple-900/30 text-purple-300 px-2 py-0.5 rounded-full">
@@ -270,15 +322,19 @@ export default function Combustivel() {
                     </div>
                     <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-3">
                       <span>{formatDate(a.data)}</span>
-                      {a.km != null && <span>{a.km.toLocaleString('pt-BR')} km</span>}
-                      <span>R$ {Number(a.valorLitro).toFixed(3)}/L</span>
+                      {a.kmAndados != null ? (
+                        <span>+{a.kmAndados} km andados</span>
+                      ) : (
+                        a.km != null && <span>{a.km.toLocaleString('pt-BR')} km</span>
+                      )}
+                      {a.valorLitro != null && <span>R$ {Number(a.valorLitro).toFixed(3)}/L</span>}
                       {a.posto && <span>⛽ {a.posto}</span>}
                     </div>
                     {a.observacoes && <p className="text-gray-600 text-xs mt-1">{a.observacoes}</p>}
                   </div>
                   <button onClick={() => { setEditingId(a.id); setEditForm({
-                    data: a.data, km: a.km?.toString() ?? '', litros: String(a.litros),
-                    valorLitro: String(a.valorLitro), valorTotal: String(a.valorTotal),
+                    data: a.data, km: a.km?.toString() ?? '', kmAndados: a.kmAndados?.toString() ?? '', litros: a.litros?.toString() ?? '',
+                    valorTotal: String(a.valorTotal),
                     tipoCombustivel: a.tipoCombustivel ?? '', posto: a.posto ?? '',
                     tanqueCheio: a.tanqueCheio, observacoes: a.observacoes ?? ''
                   }) }}
@@ -293,21 +349,24 @@ export default function Combustivel() {
                       <input type="date" value={editForm!.data}
                         onChange={e => setEditForm(p => p ? { ...p, data: e.target.value } : null)} className={inputCls} />
                     </div>
-                    <div><label className={labelCls}>KM</label>
-                      <input type="number" value={editForm!.km}
-                        onChange={e => setEditForm(p => p ? { ...p, km: e.target.value } : null)} className={inputCls} />
+                    {a.kmAndados != null ? (
+                      <div><label className={labelCls}>KM andados</label>
+                        <input type="number" value={editForm!.kmAndados}
+                          onChange={e => setEditForm(p => p ? { ...p, kmAndados: e.target.value } : null)} className={inputCls} />
+                      </div>
+                    ) : (
+                      <div><label className={labelCls}>KM (Absoluto)</label>
+                        <input type="number" value={editForm!.km}
+                          onChange={e => setEditForm(p => p ? { ...p, km: e.target.value } : null)} className={inputCls} />
+                      </div>
+                    )}
+                    <div><label className={labelCls}>Valor total *</label>
+                      <input type="number" step="0.01" required value={editForm!.valorTotal}
+                        onChange={e => setEditForm(p => p ? { ...p, valorTotal: e.target.value } : null)} className={inputCls} />
                     </div>
                     <div><label className={labelCls}>Litros</label>
                       <input type="number" step="0.001" value={editForm!.litros}
                         onChange={e => setEditForm(p => p ? { ...p, litros: e.target.value } : null)} className={inputCls} />
-                    </div>
-                    <div><label className={labelCls}>R$/L</label>
-                      <input type="number" step="0.001" value={editForm!.valorLitro}
-                        onChange={e => setEditForm(p => p ? { ...p, valorLitro: e.target.value } : null)} className={inputCls} />
-                    </div>
-                    <div><label className={labelCls}>Valor total</label>
-                      <input type="number" step="0.01" value={editForm!.valorTotal}
-                        onChange={e => setEditForm(p => p ? { ...p, valorTotal: e.target.value } : null)} className={inputCls} />
                     </div>
                     <div><label className={labelCls}>Posto</label>
                       <input type="text" value={editForm!.posto}

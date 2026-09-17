@@ -19,10 +19,12 @@ public class DashboardApiController {
 
     private final TrocaRepository trocaRepository;
     private final UserContextService userContextService;
+    private final com.delrey.combustivel.AbastecimentoRepository abastecimentoRepository;
 
-    public DashboardApiController(TrocaRepository trocaRepository, UserContextService userContextService) {
+    public DashboardApiController(TrocaRepository trocaRepository, UserContextService userContextService, com.delrey.combustivel.AbastecimentoRepository abastecimentoRepository) {
         this.trocaRepository = trocaRepository;
         this.userContextService = userContextService;
+        this.abastecimentoRepository = abastecimentoRepository;
     }
 
     record CarroDto(Long id, String modelo, Integer ano, String motor, String versao, Integer kmAtual) {}
@@ -43,7 +45,9 @@ public class DashboardApiController {
             List<CategoriaTotal> porCategoriaServicos,
             List<Integer> anosDisponiveis,
             List<FornecedorTotal> rankingFornecedores,
-            CustoPorKm custoPorKm
+            CustoPorKm custoPorKm,
+            BigDecimal totalCombustivel,
+            Integer kmAtualCombustivel
     ) {}
 
     @GetMapping
@@ -106,6 +110,25 @@ public class DashboardApiController {
                 : BigDecimal.ZERO;
         CustoPorKm custoPorKm = new CustoPorKm(custoKm, kmRodados);
 
+        List<com.delrey.combustivel.Abastecimento> abs = abastecimentoRepository.findByCarroIdAndDataBetweenOrderByDataAsc(carroId, inicio, fim);
+        BigDecimal totalCombustivel = abs.stream()
+                .map(com.delrey.combustivel.Abastecimento::getValorTotal)
+                .filter(v -> v != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Para km atual combustivel, pegamos do periodo total
+        List<com.delrey.combustivel.Abastecimento> allAbs = abastecimentoRepository.findByCarroIdOrderByDataAsc(carroId);
+        Integer kmAtualCombustivel = null;
+        Integer ultimoKmAbsoluto = null;
+        for (com.delrey.combustivel.Abastecimento a : allAbs) {
+            if (a.getKm() != null) {
+                ultimoKmAbsoluto = a.getKm();
+            } else if (a.getKmAndados() != null && ultimoKmAbsoluto != null) {
+                ultimoKmAbsoluto += a.getKmAndados();
+            }
+        }
+        kmAtualCombustivel = ultimoKmAbsoluto;
+
         return new DashboardResponse(
                 carroDto,
                 anoFiltro,
@@ -119,7 +142,9 @@ public class DashboardApiController {
                 porCategoriaServicos,
                 anosDisponiveis,
                 rankingFornecedores,
-                custoPorKm
+                custoPorKm,
+                totalCombustivel,
+                kmAtualCombustivel
         );
     }
 

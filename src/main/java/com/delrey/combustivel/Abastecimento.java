@@ -25,12 +25,20 @@ public class Abastecimento {
     @Column(nullable = false)
     private LocalDate data;
 
+    /** KM total do hodômetro no momento do abastecimento (absoluto). */
     private Integer km;
 
-    @Column(nullable = false, precision = 10, scale = 3)
+    /** KM andados desde o abastecimento anterior (relativo).
+     *  Quando informado, o km absoluto é calculado a partir do último registro. */
+    @Column(name = "km_andados")
+    private Integer kmAndados;
+
+    /** Litros abastecidos — opcional. */
+    @Column(precision = 10, scale = 3)
     private BigDecimal litros;
 
-    @Column(name = "valor_litro", nullable = false, precision = 10, scale = 3)
+    /** Preço por litro — calculado automaticamente se litros e valorTotal forem informados. */
+    @Column(name = "valor_litro", precision = 10, scale = 3)
     private BigDecimal valorLitro;
 
     @Column(name = "valor_total", nullable = false, precision = 10, scale = 2)

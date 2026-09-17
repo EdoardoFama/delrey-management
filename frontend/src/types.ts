@@ -57,6 +57,8 @@ export interface DashboardData {
   anosDisponiveis: number[]
   rankingFornecedores: FornecedorTotal[]
   custoPorKm: { custo: number; kmRodados: number | null }
+  totalCombustivel: number
+  kmAtualCombustivel?: number
 }
 
 export interface FornecedorTotal {
@@ -139,8 +141,9 @@ export interface Abastecimento {
   id: number
   data: string
   km: number | null
-  litros: number
-  valorLitro: number
+  kmAndados?: number
+  litros?: number
+  valorLitro?: number
   valorTotal: number
   tipoCombustivel?: string
   posto?: string
@@ -156,6 +159,9 @@ export interface CombustivelResumo {
   valorLitroMedio: number
   totalLitros: number
   totalKm: number | null
+  kmAtualCalculado?: number
+  postos: string[]
+  tipos: string[]
 }
 
 export interface GarantiaAtiva {

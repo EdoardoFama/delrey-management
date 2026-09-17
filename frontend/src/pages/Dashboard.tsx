@@ -50,10 +50,21 @@ export default function Dashboard() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white">Dashboard</h1>
           {data.carro && (
-            <p className="text-gray-400 mt-1">
-              {data.carro.modelo} · {data.carro.motor} ·{' '}
-              {data.carro.kmAtual?.toLocaleString('pt-BR')} km
-            </p>
+            <div className="mt-1">
+              <p className="text-gray-400">
+                {data.carro.modelo} · {data.carro.motor}
+              </p>
+              <div className="flex items-center gap-3 mt-1">
+                <span className="text-sm bg-gray-800 text-gray-300 px-2 py-0.5 rounded-md">
+                  Hodômetro: {data.carro.kmAtual?.toLocaleString('pt-BR')} km
+                </span>
+                {data.kmAtualCombustivel != null && (
+                  <span className="text-sm bg-purple-900/40 text-purple-300 px-2 py-0.5 rounded-md">
+                    Calculado (Combustível): {data.kmAtualCombustivel.toLocaleString('pt-BR')} km
+                  </span>
+                )}
+              </div>
+            </div>
           )}
         </div>
 
@@ -91,7 +102,7 @@ export default function Dashboard() {
       </div>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">
           <div className="flex items-center gap-2 mb-2">
             <span className="w-2 h-2 rounded-full bg-purple-400" />
@@ -110,13 +121,22 @@ export default function Dashboard() {
           <p className="text-xs text-gray-500 mt-1">Mão de obra + peças</p>
         </div>
 
+        <div className="bg-[#16162a] border border-orange-900/30 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-2 h-2 rounded-full bg-orange-400" />
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Combustível · {periodoCurto}</p>
+          </div>
+          <p className="text-2xl font-bold text-white">{formatBRL(data.totalCombustivel)}</p>
+          <p className="text-xs text-gray-500 mt-1">Abastecimentos</p>
+        </div>
+
         <div className="bg-gradient-to-br from-purple-700/30 to-purple-900/30 border border-purple-500/40 rounded-xl p-5">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-purple-300 font-bold">+</span>
             <p className="text-xs text-purple-200 uppercase tracking-wider">Total · {periodoCurto}</p>
           </div>
-          <p className="text-2xl font-bold text-purple-300">{formatBRL(data.totalPeriodo)}</p>
-          <p className="text-xs text-purple-300/60 mt-1">Compras + Serviços</p>
+          <p className="text-2xl font-bold text-purple-300">{formatBRL(data.totalPeriodo + data.totalCombustivel)}</p>
+          <p className="text-xs text-purple-300/60 mt-1">Compras + Serviços + Combustível</p>
         </div>
 
         <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">

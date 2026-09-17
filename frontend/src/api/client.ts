@@ -52,7 +52,15 @@ export const api = {
   createLeituraKm: (body: unknown) => request('/api/hodometro', { method: 'POST', body: JSON.stringify(body) }),
   updateLeituraKm: (id: number, body: unknown) => request(`/api/hodometro/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   deleteLeituraKm: (id: number) => request(`/api/hodometro/${id}`, { method: 'DELETE' }),
-  getCombustivel: () => request('/api/combustivel'),
+  getCombustivel: (ano?: number, mes?: number, posto?: string, tipo?: string) => {
+    const params = new URLSearchParams()
+    if (ano != null) params.set('ano', String(ano))
+    if (mes != null) params.set('mes', String(mes))
+    if (posto) params.set('posto', posto)
+    if (tipo) params.set('tipo', tipo)
+    const qs = params.toString()
+    return request(`/api/combustivel${qs ? `?${qs}` : ''}`)
+  },
   createAbastecimento: (body: unknown) => request('/api/combustivel', { method: 'POST', body: JSON.stringify(body) }),
   updateAbastecimento: (id: number, body: unknown) => request(`/api/combustivel/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   deleteAbastecimento: (id: number) => request(`/api/combustivel/${id}`, { method: 'DELETE' }),
