@@ -40,7 +40,7 @@ export default function Alertas() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Alertas de manutenção</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white">Alertas de manutenção</h1>
         <p className="text-gray-500 text-sm mt-1">
           Baseado nos intervalos cadastrados nas peças e na última troca registrada.
         </p>

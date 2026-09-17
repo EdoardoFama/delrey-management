@@ -119,9 +119,9 @@ export default function Combustivel() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-white">Combustível</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Combustível</h1>
           <p className="text-gray-500 text-sm mt-1">Abastecimentos, consumo médio e gasto</p>
         </div>
         <button
@@ -288,7 +288,7 @@ export default function Combustivel() {
               ) : (
                 <div className="p-5 space-y-3">
                   <p className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Editando</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div><label className={labelCls}>Data</label>
                       <input type="date" value={editForm!.data}
                         onChange={e => setEditForm(p => p ? { ...p, data: e.target.value } : null)} className={inputCls} />

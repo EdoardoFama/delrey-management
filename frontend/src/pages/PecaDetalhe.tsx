@@ -61,12 +61,12 @@ export default function PecaDetalhe() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <Link to="/pecas" className="text-sm text-gray-500 hover:text-purple-400 transition-colors">
             ← Peças
           </Link>
-          <h1 className="text-3xl font-bold text-white mt-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mt-2">
             {editing ? (
               <input name="nome" value={form.nome ?? ''} onChange={handleChange} className={inputClass + ' text-2xl font-bold'} />
             ) : peca.nome}
@@ -76,7 +76,7 @@ export default function PecaDetalhe() {
           </span>
         </div>
 
-        <div className="flex gap-2 mt-6">
+        <div className="flex gap-2">
           {!editing ? (
             <>
               <button
@@ -115,7 +115,7 @@ export default function PecaDetalhe() {
       {/* Info da peça */}
       <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-6">
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Informações</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {([
             { key: 'fabricante', label: 'Fabricante' },
             { key: 'codigoOem', label: 'Código OEM' },

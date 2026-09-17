@@ -39,7 +39,7 @@ export default function Timeline() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Timeline do Del Rey</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white">Timeline do Del Rey</h1>
         <p className="text-gray-500 text-sm mt-1">
           Histórico cronológico de todas as compras e serviços, agrupado por mês.
         </p>

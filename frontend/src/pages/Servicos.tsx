@@ -148,9 +148,9 @@ export default function Servicos() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-white">Serviços</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Serviços</h1>
           <p className="text-gray-500 text-sm mt-1">Trabalhos realizados no Del Rey</p>
         </div>
         <button
@@ -216,7 +216,7 @@ export default function Servicos() {
 
       {/* Resumo */}
       {servicos.length > 0 && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-4">
             <p className="text-xs text-gray-500 mb-1">Total mão de obra</p>
             <p className="text-xl font-bold text-purple-400">{formatBRL(totalMaoDeObra)}</p>
@@ -317,31 +317,37 @@ export default function Servicos() {
           {listaFiltrada.map((s) => (
             <div key={s.id} className="bg-[#16162a] border border-purple-900/30 rounded-xl overflow-hidden">
               {editingId !== s.id ? (
-                <div className="flex items-center gap-4 px-5 py-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white font-medium">{s.pecaNome}</p>
-                    <div className="flex flex-wrap gap-3 mt-1 text-xs text-gray-500">
-                      <span className="bg-purple-900/30 text-purple-300 px-2 py-0.5 rounded-full">{s.categoriaNome}</span>
-                      <span>{formatDate(s.dataTroca)}</span>
-                      {s.km && <span>{s.km.toLocaleString('pt-BR')} km</span>}
-                      {s.fornecedor && <span>🔧 {s.fornecedor}</span>}
-                      {s.garantiaMeses && <span>✓ {s.garantiaMeses} meses garantia</span>}
+                <div className="px-4 sm:px-5 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-medium">{s.pecaNome}</p>
+                      <div className="flex flex-wrap gap-2 mt-1.5 text-xs text-gray-500">
+                        <span className="bg-purple-900/30 text-purple-300 px-2 py-0.5 rounded-full">{s.categoriaNome}</span>
+                        <span>{formatDate(s.dataTroca)}</span>
+                        {s.km && <span>{s.km.toLocaleString('pt-BR')} km</span>}
+                        {s.fornecedor && <span>🔧 {s.fornecedor}</span>}
+                        {s.garantiaMeses && <span>✓ {s.garantiaMeses} meses garantia</span>}
+                      </div>
+                      {s.observacoes && <p className="text-gray-600 text-xs mt-1">{s.observacoes}</p>}
                     </div>
-                    {s.observacoes && <p className="text-gray-600 text-xs mt-1">{s.observacoes}</p>}
-                    <AnexosList trocaId={s.id} />
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button onClick={() => { setEditingId(s.id); setEditForm({ pecaId: String(s.pecaId), dataTroca: s.dataTroca, km: s.km?.toString() ?? '', valor: s.valor?.toString() ?? '', maoDeObra: s.maoDeObra?.toString() ?? '', fornecedor: s.fornecedor ?? '', garantiaMeses: s.garantiaMeses?.toString() ?? '', observacoes: s.observacoes ?? '' }) }}
+                        className="text-gray-500 hover:text-purple-400 transition-colors px-2">✏️</button>
+                      <button onClick={() => handleDelete(s.id)} className="text-gray-600 hover:text-red-400 transition-colors px-2">✕</button>
+                    </div>
                   </div>
-                  <div className="text-right whitespace-nowrap">
-                    {(s.maoDeObra || 0) > 0 && <p className="text-xs text-gray-500">M.O. {formatBRL(s.maoDeObra!)}</p>}
-                    <p className="text-purple-400 font-semibold">{formatBRL((s.valor || 0) + (s.maoDeObra || 0))}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <div>
+                      {(s.maoDeObra || 0) > 0 && <span className="text-xs text-gray-500 mr-2">M.O. {formatBRL(s.maoDeObra!)}</span>}
+                    </div>
+                    <span className="text-purple-400 font-semibold">{formatBRL((s.valor || 0) + (s.maoDeObra || 0))}</span>
                   </div>
-                  <button onClick={() => { setEditingId(s.id); setEditForm({ pecaId: String(s.pecaId), dataTroca: s.dataTroca, km: s.km?.toString() ?? '', valor: s.valor?.toString() ?? '', maoDeObra: s.maoDeObra?.toString() ?? '', fornecedor: s.fornecedor ?? '', garantiaMeses: s.garantiaMeses?.toString() ?? '', observacoes: s.observacoes ?? '' }) }}
-                    className="text-gray-500 hover:text-purple-400 transition-colors px-2">✏️</button>
-                  <button onClick={() => handleDelete(s.id)} className="text-gray-600 hover:text-red-400 transition-colors px-2">✕</button>
+                  <AnexosList trocaId={s.id} />
                 </div>
               ) : (
                 <div className="p-5 space-y-3">
                   <p className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Editando serviço</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="col-span-2 sm:col-span-3">
                       <label className={labelClass}>Peça</label>
                       <PecaCombobox

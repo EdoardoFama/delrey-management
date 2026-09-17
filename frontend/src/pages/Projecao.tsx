@@ -53,7 +53,7 @@ export default function Projecao() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Projeção de gastos</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white">Projeção de gastos</h1>
         <p className="text-gray-500 text-sm mt-1">
           Estimativa baseada no ritmo de uso, consumo de combustível e manutenções previstas.
         </p>
@@ -105,7 +105,7 @@ export default function Projecao() {
       </div>
 
       {/* Seletor de período */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         {data.periodos.map(p => (
           <button
             key={p.meses}

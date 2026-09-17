@@ -33,7 +33,7 @@ function Layout() {
   return (
     <div className="min-h-screen bg-[#0a0a12]">
       <Navbar />
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/compras" element={<Compras />} />

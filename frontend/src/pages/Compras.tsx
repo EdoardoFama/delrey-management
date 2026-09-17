@@ -141,9 +141,9 @@ export default function Compras() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-white">Compras</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Compras</h1>
           <p className="text-gray-500 text-sm mt-1">Peças adquiridas por você</p>
         </div>
         <button
@@ -298,27 +298,33 @@ export default function Compras() {
           {listaFiltrada.map((c) => (
             <div key={c.id} className="bg-[#16162a] border border-purple-900/30 rounded-xl overflow-hidden">
               {editingId !== c.id ? (
-                <div className="flex items-center gap-4 px-5 py-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white font-medium">{c.pecaNome}</p>
-                    <div className="flex flex-wrap gap-3 mt-1 text-xs text-gray-500">
-                      <span className="bg-purple-900/30 text-purple-300 px-2 py-0.5 rounded-full">{c.categoriaNome}</span>
-                      <span>{formatDate(c.dataTroca)}</span>
-                      {c.km && <span>{c.km.toLocaleString('pt-BR')} km</span>}
-                      {c.fornecedor && <span>📍 {c.fornecedor}</span>}
+                <div className="px-4 sm:px-5 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-medium">{c.pecaNome}</p>
+                      <div className="flex flex-wrap gap-2 mt-1.5 text-xs text-gray-500">
+                        <span className="bg-purple-900/30 text-purple-300 px-2 py-0.5 rounded-full">{c.categoriaNome}</span>
+                        <span>{formatDate(c.dataTroca)}</span>
+                        {c.km && <span>{c.km.toLocaleString('pt-BR')} km</span>}
+                        {c.fornecedor && <span>📍 {c.fornecedor}</span>}
+                      </div>
+                      {c.observacoes && <p className="text-gray-600 text-xs mt-1">{c.observacoes}</p>}
                     </div>
-                    {c.observacoes && <p className="text-gray-600 text-xs mt-1">{c.observacoes}</p>}
-                    <AnexosList trocaId={c.id} />
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button onClick={() => { setEditingId(c.id); setEditForm({ pecaId: String(c.pecaId), dataTroca: c.dataTroca, km: c.km?.toString() ?? '', valor: c.valor?.toString() ?? '', fornecedor: c.fornecedor ?? '', observacoes: c.observacoes ?? '' }) }}
+                        className="text-gray-500 hover:text-purple-400 transition-colors px-2">✏️</button>
+                      <button onClick={() => handleDelete(c.id)} className="text-gray-600 hover:text-red-400 transition-colors px-2">✕</button>
+                    </div>
                   </div>
-                  <span className="text-purple-400 font-semibold whitespace-nowrap">{formatBRL(c.valor || 0)}</span>
-                  <button onClick={() => { setEditingId(c.id); setEditForm({ pecaId: String(c.pecaId), dataTroca: c.dataTroca, km: c.km?.toString() ?? '', valor: c.valor?.toString() ?? '', fornecedor: c.fornecedor ?? '', observacoes: c.observacoes ?? '' }) }}
-                    className="text-gray-500 hover:text-purple-400 transition-colors px-2">✏️</button>
-                  <button onClick={() => handleDelete(c.id)} className="text-gray-600 hover:text-red-400 transition-colors px-2">✕</button>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-purple-400 font-semibold">{formatBRL(c.valor || 0)}</span>
+                  </div>
+                  <AnexosList trocaId={c.id} />
                 </div>
               ) : (
                 <div className="p-5 space-y-3">
                   <p className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Editando compra</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="col-span-2 sm:col-span-3">
                       <label className={labelClass}>Peça</label>
                       <PecaCombobox

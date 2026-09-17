@@ -48,7 +48,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Dashboard</h1>
           {data.carro && (
             <p className="text-gray-400 mt-1">
               {data.carro.modelo} · {data.carro.motor} ·{' '}

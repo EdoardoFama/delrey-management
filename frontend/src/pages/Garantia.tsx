@@ -25,7 +25,7 @@ export default function Garantia() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Garantias ativas</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white">Garantias ativas</h1>
         <p className="text-gray-500 text-sm mt-1">
           Serviços ainda dentro do prazo de garantia.
         </p>

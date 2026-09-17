@@ -78,9 +78,9 @@ export default function Relatorio() {
       `}</style>
 
       {/* Botões de ação — não aparecem no print */}
-      <div className="no-print flex items-center justify-between mb-6">
+      <div className="no-print flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-white">Dossiê do carro</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Dossiê do carro</h1>
           <p className="text-gray-500 text-sm mt-1">Resumo completo para impressão ou compartilhamento.</p>
         </div>
         <div className="flex gap-2">
@@ -110,7 +110,7 @@ export default function Relatorio() {
 
         {/* Cabeçalho */}
         <div className="print-section bg-gradient-to-br from-purple-900/30 to-[#16162a] border border-purple-700/40 rounded-xl p-6">
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
             <div>
               <h2 className="text-2xl font-bold text-white">
                 {carro?.modelo} {carro?.ano}
