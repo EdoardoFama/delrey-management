@@ -27,10 +27,14 @@ export default function Dashboard() {
 
   useEffect(() => {
     setLoading(true)
-    api.getDashboard(ano, mes).then((d) => {
-      setData(d as DashboardData)
-      setLoading(false)
-    })
+    api.getDashboard(ano, mes)
+      .then((d) => {
+        setData(d as DashboardData)
+        setLoading(false)
+      })
+      .catch(() => {
+        setLoading(false)
+      })
   }, [ano, mes])
 
   if (loading && !data) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>

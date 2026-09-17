@@ -19,7 +19,16 @@ import Glossario from './pages/Glossario'
 
 function Layout() {
   const { pathname } = useLocation()
-  if (pathname === '/login') return <Login />
+  const token = localStorage.getItem('jwt_token')
+
+  if (pathname === '/login') {
+    if (token) return <Navigate to="/" replace />
+    return <Login />
+  }
+
+  if (!token) {
+    return <Navigate to="/login" replace />
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a12]">
@@ -52,7 +61,6 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<Login />} />
         <Route path="/*" element={<Layout />} />
       </Routes>
     </BrowserRouter>
