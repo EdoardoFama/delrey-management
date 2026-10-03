@@ -5,12 +5,18 @@ function getAuthHeader(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
+function getVehicleHeader(): Record<string, string> {
+  const vehicleId = localStorage.getItem('vehicle_id')
+  return vehicleId ? { 'X-Vehicle-Id': vehicleId } : {}
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(base + path, {
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeader(),
+      ...getVehicleHeader(),
       ...options?.headers,
     },
     ...options,
@@ -44,6 +50,8 @@ export const api = {
   createPeca: (body: { nome: string; categoriaId: number }) =>
     request('/api/pecas', { method: 'POST', body: JSON.stringify(body) }),
   getCarro: () => request('/api/carro'),
+  listCarros: () => request('/api/carro/list'),
+  createCarro: (body: unknown) => request('/api/carro/new', { method: 'POST', body: JSON.stringify(body) }),
   updateCarro: (body: unknown) => request('/api/carro', { method: 'PUT', body: JSON.stringify(body) }),
   updatePeca: (id: number, body: unknown) => request(`/api/pecas/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   updateTroca: (id: number, body: unknown) => request(`/api/trocas/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
@@ -80,7 +88,7 @@ export const api = {
     const res = await fetch(`${base}/api/anexos`, {
       method: 'POST',
       credentials: 'include',
-      headers: getAuthHeader(),
+      headers: { ...getAuthHeader(), ...getVehicleHeader() },
       body: form
     })
     if (res.status === 401) {
@@ -97,7 +105,7 @@ export const api = {
     const res = await fetch(`${base}/api/carro/foto`, {
       method: 'POST',
       credentials: 'include',
-      headers: getAuthHeader(),
+      headers: { ...getAuthHeader(), ...getVehicleHeader() },
       body: form
     })
     if (res.status === 401) {

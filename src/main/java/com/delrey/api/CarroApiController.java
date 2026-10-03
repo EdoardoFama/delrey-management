@@ -47,6 +47,30 @@ public class CarroApiController {
         return toDto(userContextService.getCarroDoUsuarioAtual());
     }
 
+    @GetMapping("/list")
+    public java.util.List<CarroDto> listAll() {
+        String username = userContextService.getCurrentUsername();
+        return carroRepository.findAllByUsuarioOrderByIdAsc(username).stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    @PostMapping("/new")
+    public CarroDto createNew(@RequestBody CarroUpdateRequest req) {
+        String username = userContextService.getCurrentUsername();
+        Carro carro = new Carro();
+        carro.setUsuario(username);
+        carro.setModelo(req.modelo() != null ? req.modelo() : "Novo Veículo");
+        carro.setAno(req.ano() != null ? req.ano() : 2026);
+        carro.setMotor(req.motor() != null ? req.motor() : "");
+        carro.setVersao(req.versao() != null ? req.versao() : "");
+        carro.setPlaca(req.placa() != null ? req.placa() : "");
+        carro.setKmAtual(req.kmAtual() != null ? req.kmAtual() : 0);
+        carro.setCor(req.cor() != null ? req.cor() : "");
+        carro.setObservacoes(req.observacoes() != null ? req.observacoes() : "");
+        return toDto(carroRepository.save(carro));
+    }
+
     @PutMapping
     public CarroDto update(@RequestBody CarroUpdateRequest req) {
         Carro carro = userContextService.getCarroDoUsuarioAtual();

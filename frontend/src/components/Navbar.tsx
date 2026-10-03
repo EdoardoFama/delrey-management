@@ -84,6 +84,16 @@ export default function Navbar() {
             </NavLink>
           ))}
 
+          <button
+            onClick={() => {
+              localStorage.removeItem('vehicle_id')
+              window.location.href = '/select-vehicle'
+            }}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-purple-400 hover:text-purple-300 hover:bg-purple-900/20 transition-colors ml-3 border border-purple-500/30"
+          >
+            Trocar Veículo
+          </button>
+          
           <form onSubmit={handleLogout} className="ml-3">
             <button
               type="submit"
@@ -155,8 +165,19 @@ export default function Navbar() {
           ))}
         </div>
 
-        {/* Drawer footer — logout */}
-        <div className="shrink-0 border-t border-purple-900/30 px-3 py-3">
+        {/* Drawer footer — logout / switch */}
+        <div className="shrink-0 border-t border-purple-900/30 px-3 py-3 space-y-2">
+          <button
+            onClick={() => {
+              localStorage.removeItem('vehicle_id')
+              window.location.href = '/select-vehicle'
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-purple-400 hover:text-purple-300 hover:bg-purple-900/20 transition-colors border border-purple-500/30"
+          >
+            <span className="text-base">🔄</span>
+            Trocar Veículo
+          </button>
+          
           <form onSubmit={handleLogout}>
             <button
               type="submit"

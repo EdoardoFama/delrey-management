@@ -16,6 +16,7 @@ import Projecao from './pages/Projecao'
 import Problemas from './pages/Problemas'
 import Relatorio from './pages/Relatorio'
 import Glossario from './pages/Glossario'
+import SelectVehicle from './pages/SelectVehicle'
 
 function Layout() {
   const { pathname } = useLocation()
@@ -28,6 +29,15 @@ function Layout() {
 
   if (!token) {
     return <Navigate to="/login" replace />
+  }
+
+  const vehicleId = localStorage.getItem('vehicle_id')
+  if (!vehicleId && pathname !== '/select-vehicle') {
+    return <Navigate to="/select-vehicle" replace />
+  }
+
+  if (pathname === '/select-vehicle') {
+    return <SelectVehicle />
   }
 
   return (
