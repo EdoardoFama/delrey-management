@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
-import { useNavigate } from 'react-router-dom'
 
 interface CarroDto {
   id: number
@@ -17,8 +16,6 @@ export default function SelectVehicle() {
   const [creating, setCreating] = useState(false)
   const [newModel, setNewModel] = useState('')
   const [newYear, setNewYear] = useState('')
-
-  const navigate = useNavigate()
 
   useEffect(() => {
     loadVehicles()
