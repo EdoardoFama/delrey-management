@@ -84,22 +84,22 @@ public class CombustivelApiController {
 
         // Calcula km/L de cada abastecimento
         List<AbastecimentoDto> dtos = new ArrayList<>();
-        Abastecimento anteriorCheio = null;
+        Abastecimento anterior = null;
         BigDecimal somaKmL = BigDecimal.ZERO;
         int kmlCount = 0;
 
         for (Abastecimento a : ordemAsc) {
             BigDecimal kmL = null;
-            if (Boolean.TRUE.equals(a.getTanqueCheio()) && anteriorCheio != null
-                    && a.getKm() != null && anteriorCheio.getKm() != null
-                    && a.getKm() > anteriorCheio.getKm()
+            if (anterior != null
+                    && a.getKm() != null && anterior.getKm() != null
+                    && a.getKm() > anterior.getKm()
                     && a.getLitros() != null && a.getLitros().compareTo(BigDecimal.ZERO) > 0) {
-                int diffKm = a.getKm() - anteriorCheio.getKm();
+                int diffKm = a.getKm() - anterior.getKm();
                 kmL = BigDecimal.valueOf(diffKm).divide(a.getLitros(), 2, RoundingMode.HALF_UP);
                 somaKmL = somaKmL.add(kmL);
                 kmlCount++;
             }
-            if (Boolean.TRUE.equals(a.getTanqueCheio())) anteriorCheio = a;
+            anterior = a;
 
             dtos.add(toDto(a, kmL));
         }
