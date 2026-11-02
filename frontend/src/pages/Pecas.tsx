@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import type { Peca } from '../types'
+import LoadingState from '../components/LoadingState'
 
 export default function Pecas() {
   const [pecas, setPecas] = useState<Peca[]>([])
@@ -41,7 +42,7 @@ export default function Pecas() {
       />
 
       {loading ? (
-        <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
+        <LoadingState message="Carregando catálogo de peças..." subMessage="Buscando lista de peças cadastradas e categorias" />
       ) : pecas.length === 0 ? (
         <div className="text-center py-12 text-gray-500">Nenhuma peça encontrada.</div>
       ) : (

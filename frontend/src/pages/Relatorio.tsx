@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
 import type { Troca, HodometroResumo, CombustivelResumo, AlertaManutencao } from '../types'
+import LoadingState from '../components/LoadingState'
 
 function formatBRL(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -40,7 +41,7 @@ export default function Relatorio() {
     })
   }, [])
 
-  if (loading) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
+  if (loading) return <LoadingState message="Gerando dossiê do veículo..." subMessage="Consolidando histórico completo, investimentos, serviços e alertas" />
 
   const totalCompras = trocas.filter(t => t.tipo === 'COMPRA')
     .reduce((s, t) => s + (t.valor || 0), 0)

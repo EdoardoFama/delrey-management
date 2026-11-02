@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
 import type { GarantiaAtiva } from '../types'
+import LoadingState from '../components/LoadingState'
 
 function formatBRL(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -20,7 +21,7 @@ export default function Garantia() {
     })
   }, [])
 
-  if (loading) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
+  if (loading) return <LoadingState message="Carregando garantias..." subMessage="Buscando serviços dentro do período de cobertura" />
 
   return (
     <div className="space-y-6">

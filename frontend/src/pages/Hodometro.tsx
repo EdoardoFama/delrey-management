@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
 import type { HodometroResumo, LeituraKm } from '../types'
+import LoadingState from '../components/LoadingState'
 
 const inputCls = 'w-full bg-[#0a0a12] border border-purple-900/40 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 transition-colors'
 const labelCls = 'block text-xs text-gray-500 mb-1'
@@ -75,7 +76,7 @@ export default function Hodometro() {
     recarregar()
   }
 
-  if (loading || !resumo) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
+  if (loading || !resumo) return <LoadingState message="Carregando hodômetro..." subMessage="Processando histórico de quilometragem e projeções de ritmo de uso" />
 
   return (
     <div className="space-y-6">

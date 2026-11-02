@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { api } from '../api/client'
 import type { PecaDetalhe as PecaDetalheType, Peca } from '../types'
+import LoadingState from '../components/LoadingState'
 
 function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -53,7 +54,7 @@ export default function PecaDetalhe() {
     setSaving(false)
   }
 
-  if (loading) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
+  if (loading) return <LoadingState message="Carregando detalhes da peça..." subMessage="Buscando especificações técnicas e histórico de trocas" />
   if (!data) return null
 
   const { peca, historico } = data

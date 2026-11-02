@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import type { Peca, Troca } from '../types'
+import LoadingState from '../components/LoadingState'
 
 function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -94,7 +95,7 @@ export default function Trocas() {
     if (editingId === id) cancelEdit()
   }
 
-  if (loading) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
+  if (loading) return <LoadingState message="Carregando trocas de peças..." subMessage="Buscando histórico de manutenções" />
 
   return (
     <div className="space-y-6">

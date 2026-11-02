@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api/client'
 import DelReyIcon from '../components/DelReyIcon'
+import LoadingState from '../components/LoadingState'
 
 interface CarroData {
   id: number
@@ -65,7 +66,7 @@ export default function Carro() {
     setUploading(false)
   }
 
-  if (!carro) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
+  if (!carro) return <LoadingState message="Carregando dados do veículo..." subMessage="Buscando especificações, ano, modelo e hodômetro" />
 
   const inputClass = 'w-full bg-[#0d0d1a] border border-purple-900/40 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/40 transition-colors'
   const valueClass = 'text-white font-medium'

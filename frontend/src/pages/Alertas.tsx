@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import type { AlertaManutencao } from '../types'
+import LoadingState from '../components/LoadingState'
 
 function formatDate(d: string | null) {
   if (!d) return '—'
@@ -27,7 +28,7 @@ export default function Alertas() {
     })
   }, [])
 
-  if (loading) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
+  if (loading) return <LoadingState message="Carregando alertas..." subMessage="Verificando prazos e intervalos de revisão das peças" />
 
   const lista = filtroStatus ? alertas.filter(a => a.status === filtroStatus) : alertas
   const contagem = {

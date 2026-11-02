@@ -3,6 +3,7 @@ import { api } from '../api/client'
 import type { Categoria, Peca, Troca } from '../types'
 import PecaCombobox from '../components/PecaCombobox'
 import AnexosList from '../components/AnexosList'
+import LoadingState from '../components/LoadingState'
 
 function formatBRL(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -143,7 +144,7 @@ export default function Servicos() {
     return lista
   }, [servicos, filtroCategoria, filtroAno, filtroMes, ordenacao, buscaTexto])
 
-  if (loading) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
+  if (loading) return <LoadingState message="Carregando serviços..." subMessage="Buscando histórico de ordens de serviço e manutenções" />
 
   return (
     <div className="space-y-6">

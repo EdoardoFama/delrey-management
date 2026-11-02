@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../api/client'
 import type { Troca } from '../types'
+import LoadingState from '../components/LoadingState'
 
 function formatBRL(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -34,7 +35,7 @@ export default function Timeline() {
     return [...map.entries()].sort((a, b) => b[0].localeCompare(a[0]))
   }, [trocas])
 
-  if (loading) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
+  if (loading) return <LoadingState message="Carregando linha do tempo..." subMessage="Organizando histórico cronológico de manutenções e compras" />
 
   return (
     <div className="space-y-6">

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import type { DashboardData } from '../types'
 import DonutChart from '../components/DonutChart'
+import LoadingState from '../components/LoadingState'
 
 function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -37,7 +38,7 @@ export default function Dashboard() {
       })
   }, [ano, mes])
 
-  if (loading && !data) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
+  if (loading && !data) return <LoadingState message="Carregando Dashboard..." subMessage="Processando custos, consumo e histórico de manutenções" />
   if (!data) return null
 
   const periodoLabel = mes != null ? `${MESES[mes - 1]} ${ano}` : String(ano)
@@ -102,49 +103,49 @@ export default function Dashboard() {
       </div>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div className="bg-[#141426] border border-purple-900/30 hover:border-purple-500/40 rounded-2xl p-5 shadow-lg shadow-black/20 hover:shadow-purple-950/20 transition-all duration-200">
           <div className="flex items-center gap-2 mb-2">
-            <span className="w-2 h-2 rounded-full bg-purple-400" />
-            <p className="text-xs text-gray-400 uppercase tracking-wider">Compras · {periodoCurto}</p>
+            <span className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_6px_rgba(192,132,252,0.6)]" />
+            <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Compras · {periodoCurto}</p>
           </div>
-          <p className="text-2xl font-bold text-white">{formatBRL(data.totalCompras)}</p>
+          <p className="text-2xl font-bold text-white tracking-tight">{formatBRL(data.totalCompras)}</p>
           <p className="text-xs text-gray-500 mt-1">Peças adquiridas</p>
         </div>
 
-        <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">
+        <div className="bg-[#141426] border border-purple-900/30 hover:border-pink-500/40 rounded-2xl p-5 shadow-lg shadow-black/20 hover:shadow-pink-950/20 transition-all duration-200">
           <div className="flex items-center gap-2 mb-2">
-            <span className="w-2 h-2 rounded-full bg-pink-400" />
-            <p className="text-xs text-gray-400 uppercase tracking-wider">Serviços · {periodoCurto}</p>
+            <span className="w-2 h-2 rounded-full bg-pink-400 shadow-[0_0_6px_rgba(244,114,182,0.6)]" />
+            <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Serviços · {periodoCurto}</p>
           </div>
-          <p className="text-2xl font-bold text-white">{formatBRL(data.totalServicos)}</p>
+          <p className="text-2xl font-bold text-white tracking-tight">{formatBRL(data.totalServicos)}</p>
           <p className="text-xs text-gray-500 mt-1">Mão de obra + peças</p>
         </div>
 
-        <div className="bg-[#16162a] border border-orange-900/30 rounded-xl p-5">
+        <div className="bg-[#141426] border border-orange-900/30 hover:border-orange-500/40 rounded-2xl p-5 shadow-lg shadow-black/20 hover:shadow-orange-950/20 transition-all duration-200">
           <div className="flex items-center gap-2 mb-2">
-            <span className="w-2 h-2 rounded-full bg-orange-400" />
-            <p className="text-xs text-gray-400 uppercase tracking-wider">Combustível · {periodoCurto}</p>
+            <span className="w-2 h-2 rounded-full bg-orange-400 shadow-[0_0_6px_rgba(251,146,60,0.6)]" />
+            <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Combustível · {periodoCurto}</p>
           </div>
-          <p className="text-2xl font-bold text-white">{formatBRL(data.totalCombustivel)}</p>
+          <p className="text-2xl font-bold text-white tracking-tight">{formatBRL(data.totalCombustivel)}</p>
           <p className="text-xs text-gray-500 mt-1">Abastecimentos</p>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-700/30 to-purple-900/30 border border-purple-500/40 rounded-xl p-5">
+        <div className="bg-gradient-to-br from-purple-800/25 via-purple-900/20 to-[#141426] border border-purple-500/40 hover:border-purple-400 rounded-2xl p-5 shadow-lg shadow-purple-950/30 transition-all duration-200">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-purple-300 font-bold">+</span>
-            <p className="text-xs text-purple-200 uppercase tracking-wider">Total · {periodoCurto}</p>
+            <p className="text-xs text-purple-200 uppercase tracking-wider font-medium">Total · {periodoCurto}</p>
           </div>
-          <p className="text-2xl font-bold text-purple-300">{formatBRL(data.totalPeriodo + data.totalCombustivel)}</p>
+          <p className="text-2xl font-bold text-purple-300 tracking-tight">{formatBRL(data.totalPeriodo + data.totalCombustivel)}</p>
           <p className="text-xs text-purple-300/60 mt-1">Compras + Serviços + Combustível</p>
         </div>
 
-        <div className="bg-[#16162a] border border-purple-900/30 rounded-xl p-5">
+        <div className="bg-[#141426] border border-purple-900/30 hover:border-cyan-500/40 rounded-2xl p-5 shadow-lg shadow-black/20 hover:shadow-cyan-950/20 transition-all duration-200">
           <div className="flex items-center gap-2 mb-2">
-            <span className="w-2 h-2 rounded-full bg-cyan-400" />
-            <p className="text-xs text-gray-400 uppercase tracking-wider">Custo / km</p>
+            <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.6)]" />
+            <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Custo / km</p>
           </div>
-          <p className="text-2xl font-bold text-white">
+          <p className="text-2xl font-bold text-white tracking-tight">
             {data.custoPorKm.kmRodados ? formatBRL(data.custoPorKm.custo) : '—'}
           </p>
           <p className="text-xs text-gray-500 mt-1">

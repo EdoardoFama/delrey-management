@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { api } from '../api/client'
 import type { Problema, Peca } from '../types'
+import LoadingState from '../components/LoadingState'
 
 function formatDate(d: string | null) {
   if (!d) return '—'
@@ -285,7 +286,7 @@ export default function Problemas() {
 
       {/* Lista */}
       {loading ? (
-        <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
+        <LoadingState message="Carregando ocorrências..." subMessage="Buscando lista de problemas e pendências mecânicas" />
       ) : listaFiltrada.length === 0 ? (
         <div className="text-center py-16 text-gray-600">
           {filtro === 'TODOS' ? 'Nenhum problema registrado.' : `Nenhum problema ${STATUS_LABEL[filtro].toLowerCase()}.`}

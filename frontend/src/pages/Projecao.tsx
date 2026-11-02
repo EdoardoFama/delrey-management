@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import type { ProjecaoData, PeriodoProjetado } from '../types'
+import LoadingState from '../components/LoadingState'
 
 function formatBRL(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -23,7 +24,7 @@ export default function Projecao() {
     })
   }, [])
 
-  if (loading || !data) return <div className="flex justify-center py-20 text-purple-400">Carregando...</div>
+  if (loading || !data) return <LoadingState message="Calculando projeções financeiras..." subMessage="Simulando custos estimados para os próximos meses" />
 
   const periodo = data.periodos.find(p => p.meses === periodoSel) || data.periodos[1]
 

@@ -9,15 +9,50 @@
 body {
   background-color: #0a0a12;
   color: #f1f0f7;
+  overflow-x: hidden;
 }
 
+/* Scrollbar estilizada moderna */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #111120;
+  background: #0a0a14;
 }
 ::-webkit-scrollbar-thumb {
-  background: #4c1d95;
-  border-radius: 3px;
+  background: #3b1464;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #6b21a8;
+}
+
+/* Micro-animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-shimmer {
+  animation: shimmer 1.8s infinite linear;
 }
