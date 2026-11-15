@@ -1,0 +1,24 @@
+name: Keep Render Backend Awake
+
+on:
+  schedule:
+    # Executa a cada 10 minutos para evitar que a instância gratuita da Render hiberne (limite de 15 min)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Permite disparar manualmente pela aba Actions no GitHub
+
+jobs:
+  ping:
+    name: Ping Health Endpoint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render API Healthcheck
+        run: |
+          echo "Enviando ping para manter o servidor acordado..."
+          HTTP_STATUS=$(curl -s -o /tmp/health_response.json -w "%{http_code}" --retry 3 --retry-delay 5 --max-time 90 https://delrey-management.onrender.com/api/health)
+          echo "Status HTTP: $HTTP_STATUS"
+          cat /tmp/health_response.json || true
+          echo ""
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "Erro: O servidor retornou status $HTTP_STATUS"
+            exit 1
+          fi
