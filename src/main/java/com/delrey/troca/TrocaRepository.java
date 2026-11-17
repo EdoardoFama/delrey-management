@@ -95,6 +95,12 @@ public interface TrocaRepository extends JpaRepository<Troca, Long> {
         select t.* from troca t
         where t.carro_id = :carroId and t.id in (
             select max(t2.id) from troca t2
+            join (
+                select peca_id, max(data_troca) as max_data
+                from troca
+                where carro_id = :carroId
+                group by peca_id
+            ) m on t2.peca_id = m.peca_id and t2.data_troca = m.max_data
             where t2.carro_id = :carroId
             group by t2.peca_id
         )

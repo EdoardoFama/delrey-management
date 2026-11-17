@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { api } from '../api/client'
 import type { PecaDetalhe as PecaDetalheType, Peca } from '../types'
 import LoadingState from '../components/LoadingState'
+import ModalRegistrarTroca from '../components/ModalRegistrarTroca'
 
 function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -21,14 +22,21 @@ export default function PecaDetalhe() {
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState<Partial<Peca>>({})
   const [saving, setSaving] = useState(false)
+  const [showModalTroca, setShowModalTroca] = useState(false)
+
+  const carregar = () => {
+    if (id) {
+      api.getPeca(Number(id)).then((d) => {
+        const dd = d as PecaDetalheType
+        setData(dd)
+        setForm(dd.peca)
+        setLoading(false)
+      })
+    }
+  }
 
   useEffect(() => {
-    if (id) api.getPeca(Number(id)).then((d) => {
-      const dd = d as PecaDetalheType
-      setData(dd)
-      setForm(dd.peca)
-      setLoading(false)
-    })
+    carregar()
   }, [id])
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
@@ -86,12 +94,14 @@ export default function PecaDetalhe() {
               >
                 Editar
               </button>
-              <Link
-                to="/trocas/nova"
-                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              <button
+                type="button"
+                onClick={() => setShowModalTroca(true)}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
               >
-                + Registrar troca
-              </Link>
+                <span>+</span>
+                <span>Registrar troca</span>
+              </button>
             </>
           ) : (
             <>
@@ -186,6 +196,19 @@ export default function PecaDetalhe() {
           </div>
         )}
       </div>
+
+      {showModalTroca && data && (
+        <ModalRegistrarTroca
+          pecaId={data.peca.id}
+          pecaNome={data.peca.nome}
+          categoriaNome={data.peca.categoria.nome}
+          onClose={() => setShowModalTroca(false)}
+          onSuccess={() => {
+            setShowModalTroca(false)
+            carregar()
+          }}
+        />
+      )}
     </div>
   )
 }
