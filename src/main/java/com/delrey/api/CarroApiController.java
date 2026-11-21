@@ -31,15 +31,16 @@ public class CarroApiController {
     }
 
     record CarroDto(Long id, String modelo, Integer ano, String motor, String versao,
-                    String placa, Integer kmAtual, String cor, String fotoUrl, String observacoes) {}
+                    String placa, Integer kmAtual, String cor, String fotoUrl, String observacoes, String tipoVeiculo) {}
 
     record CarroUpdateRequest(String modelo, Integer ano, String motor, String versao,
-                               String placa, Integer kmAtual, String cor, String observacoes) {}
+                               String placa, Integer kmAtual, String cor, String observacoes, String tipoVeiculo) {}
 
     private CarroDto toDto(Carro c) {
         String fotoUrl = c.getFotoPath() != null ? "/api/carro/foto" : null;
         return new CarroDto(c.getId(), c.getModelo(), c.getAno(), c.getMotor(), c.getVersao(),
-                c.getPlaca(), c.getKmAtual(), c.getCor(), fotoUrl, c.getObservacoes());
+                c.getPlaca(), c.getKmAtual(), c.getCor(), fotoUrl, c.getObservacoes(),
+                c.getTipoVeiculo() != null ? c.getTipoVeiculo() : "CARRO");
     }
 
     @GetMapping
@@ -68,6 +69,10 @@ public class CarroApiController {
         carro.setKmAtual(req.kmAtual() != null ? req.kmAtual() : 0);
         carro.setCor(req.cor() != null ? req.cor() : "");
         carro.setObservacoes(req.observacoes() != null ? req.observacoes() : "");
+        String tipo = req.tipoVeiculo() != null && !req.tipoVeiculo().isBlank()
+                ? req.tipoVeiculo().toUpperCase()
+                : (req.modelo() != null && req.modelo().toLowerCase().contains("moto") ? "MOTO" : "CARRO");
+        carro.setTipoVeiculo(tipo);
         return toDto(carroRepository.save(carro));
     }
 
@@ -82,6 +87,7 @@ public class CarroApiController {
         if (req.kmAtual() != null) carro.setKmAtual(req.kmAtual());
         if (req.cor() != null) carro.setCor(req.cor());
         if (req.observacoes() != null) carro.setObservacoes(req.observacoes());
+        if (req.tipoVeiculo() != null && !req.tipoVeiculo().isBlank()) carro.setTipoVeiculo(req.tipoVeiculo().toUpperCase());
         return toDto(carroRepository.save(carro));
     }
 

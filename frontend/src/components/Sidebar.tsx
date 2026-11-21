@@ -54,6 +54,7 @@ interface CarroInfo {
   ano?: number
   placa?: string
   kmAtual?: number
+  tipoVeiculo?: string
 }
 
 interface SidebarProps {
@@ -64,6 +65,7 @@ interface SidebarProps {
 
 export default function Sidebar({ carro, mobileOpen, onClose }: SidebarProps) {
   const location = useLocation()
+  const isMoto = carro?.tipoVeiculo === 'MOTO' || carro?.modelo?.toLowerCase().includes('moto') || carro?.modelo?.toLowerCase().includes('suzuki')
 
   // Fecha o drawer mobile ao navegar
   useEffect(() => {
@@ -113,7 +115,10 @@ export default function Sidebar({ carro, mobileOpen, onClose }: SidebarProps) {
             {group.title}
           </p>
           <div className="space-y-0.5 pt-1">
-            {group.items.map(({ to, label, icon }) => (
+            {group.items.map(({ to, label, icon }) => {
+              const itemLabel = to === '/carro' && isMoto ? 'Minha Moto' : label
+              const itemIcon = to === '/carro' && isMoto ? '🏍️' : icon
+              return (
               <NavLink
                 key={to}
                 to={to}
@@ -133,13 +138,13 @@ export default function Sidebar({ carro, mobileOpen, onClose }: SidebarProps) {
                         isActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]' : 'opacity-80'
                       }`}
                     >
-                      {icon}
+                      {itemIcon}
                     </span>
-                    <span className="truncate">{label}</span>
+                    <span className="truncate">{itemLabel}</span>
                   </>
                 )}
               </NavLink>
-            ))}
+            )})}
           </div>
         </div>
       ))}

@@ -6,6 +6,7 @@ interface CarroDto {
   modelo: string
   ano: number
   placa: string
+  tipoVeiculo?: string
 }
 
 export default function SelectVehicle() {
@@ -16,6 +17,7 @@ export default function SelectVehicle() {
   const [creating, setCreating] = useState(false)
   const [newModel, setNewModel] = useState('')
   const [newYear, setNewYear] = useState('')
+  const [newTipo, setNewTipo] = useState<'CARRO' | 'MOTO'>('CARRO')
 
   useEffect(() => {
     loadVehicles()
@@ -45,7 +47,8 @@ export default function SelectVehicle() {
       const created = await api.createCarro({
         modelo: newModel,
         ano: parseInt(newYear) || 2024,
-        kmAtual: 0
+        kmAtual: 0,
+        tipoVeiculo: newTipo
       }) as CarroDto
       handleSelect(created.id)
     } catch {
@@ -81,38 +84,73 @@ export default function SelectVehicle() {
             <div className="text-center text-gray-400 py-4">Carregando veículos...</div>
           ) : (
             <div className="space-y-4">
-              {vehicles.map(v => (
-                <button
-                  key={v.id}
-                  onClick={() => handleSelect(v.id)}
-                  className="w-full bg-[#0d0d1a] border border-purple-900/40 text-left rounded-xl p-4 hover:border-purple-500 hover:bg-purple-900/10 transition-all flex justify-between items-center group"
-                >
-                  <div>
-                    <h3 className="text-white font-medium group-hover:text-purple-400 transition-colors">
-                      {v.modelo}
-                    </h3>
-                    <p className="text-sm text-gray-500">Ano: {v.ano} {v.placa ? `· Placa: ${v.placa}` : ''}</p>
-                  </div>
-                  <div className="text-purple-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </button>
-              ))}
+              {vehicles.map(v => {
+                const isMoto = v.tipoVeiculo === 'MOTO' || v.modelo?.toLowerCase().includes('moto') || v.modelo?.toLowerCase().includes('suzuki')
+                return (
+                  <button
+                    key={v.id}
+                    onClick={() => handleSelect(v.id)}
+                    className="w-full bg-[#0d0d1a] border border-purple-900/40 text-left rounded-xl p-4 hover:border-purple-500 hover:bg-purple-900/10 transition-all flex justify-between items-center group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{isMoto ? '🏍️' : '🚗'}</span>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-white font-medium group-hover:text-purple-400 transition-colors">
+                            {v.modelo}
+                          </h3>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase ${isMoto ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'}`}>
+                            {isMoto ? 'Moto' : 'Carro'}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-500">Ano: {v.ano} {v.placa ? `· Placa: ${v.placa}` : ''}</p>
+                      </div>
+                    </div>
+                    <div className="text-purple-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </button>
+                )
+              })}
             </div>
           )}
 
           <div className="mt-8 pt-8 border-t border-purple-900/30">
             <h3 className="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider">Adicionar Novo Veículo</h3>
             <form onSubmit={handleCreate} className="space-y-4">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setNewTipo('CARRO')}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all flex items-center justify-center gap-2 ${
+                    newTipo === 'CARRO'
+                      ? 'bg-purple-600/30 border-purple-500 text-white'
+                      : 'bg-[#0d0d1a] border-purple-900/40 text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <span>🚗</span> Carro
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNewTipo('MOTO')}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all flex items-center justify-center gap-2 ${
+                    newTipo === 'MOTO'
+                      ? 'bg-amber-600/30 border-amber-500 text-amber-200'
+                      : 'bg-[#0d0d1a] border-purple-900/40 text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <span>🏍️</span> Moto
+                </button>
+              </div>
               <div>
                 <input
                   type="text"
                   required
                   value={newModel}
                   onChange={e => setNewModel(e.target.value)}
-                  placeholder="Modelo (ex: Honda Civic)"
+                  placeholder={newTipo === 'MOTO' ? 'Modelo da Moto (ex: Suzuki V-Strom 650 XT)' : 'Modelo (ex: Honda Civic)'}
                   className="w-full bg-[#0d0d1a] border border-purple-900/40 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-purple-500 transition-colors placeholder-gray-700"
                 />
               </div>

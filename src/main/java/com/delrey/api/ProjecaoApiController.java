@@ -108,11 +108,14 @@ public class ProjecaoApiController {
         Map<Long, Troca> ultimaPorPeca = trocaRepository.ultimaTrocaDeCadaPeca(carroId).stream()
                 .collect(Collectors.toMap(t -> t.getPeca().getId(), t -> t, (a, b) -> a));
 
+        String tipoVeiculo = (carro.getTipoVeiculo() != null) ? carro.getTipoVeiculo().toUpperCase() : "CARRO";
+        List<String> tipos = List.of(tipoVeiculo, "TODOS");
+
         // Calcula períodos de 3, 6 e 12 meses
         List<PeriodoProjetado> periodos = new ArrayList<>();
         for (int meses : new int[]{3, 6, 12}) {
             periodos.add(calcularPeriodo(meses, ritmoKmPorMes, consumoMedio, valorLitroMedio,
-                    mediaMensal, kmAtual, ultimaPorPeca, hoje));
+                    mediaMensal, kmAtual, ultimaPorPeca, hoje, tipos));
         }
 
         return new ProjecaoResponse(
@@ -130,7 +133,8 @@ public class ProjecaoApiController {
             int meses, Double ritmoKmPorMes,
             BigDecimal consumoMedio, BigDecimal valorLitroMedio,
             BigDecimal mediaMensal, Integer kmAtual,
-            Map<Long, Troca> ultimaPorPeca, LocalDate hoje
+            Map<Long, Troca> ultimaPorPeca, LocalDate hoje,
+            List<String> tipos
     ) {
         // Combustível previsto
         BigDecimal combustivel = BigDecimal.ZERO;
@@ -148,7 +152,7 @@ public class ProjecaoApiController {
         LocalDate limite = hoje.plusMonths(meses);
         Integer kmLimite = (kmAtual != null && kmPrevistos != null) ? kmAtual + kmPrevistos : null;
 
-        for (Peca peca : pecaRepository.findAll()) {
+        for (Peca peca : pecaRepository.findAllByTiposVeiculoOrderByNome(tipos)) {
             Integer intervaloKm = peca.getIntervaloKm();
             Integer intervaloMeses = peca.getIntervaloMeses();
             if (intervaloKm == null && intervaloMeses == null) continue;

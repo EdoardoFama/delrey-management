@@ -27,7 +27,7 @@ public class DashboardApiController {
         this.abastecimentoRepository = abastecimentoRepository;
     }
 
-    record CarroDto(Long id, String modelo, Integer ano, String motor, String versao, Integer kmAtual) {}
+    record CarroDto(Long id, String modelo, Integer ano, String motor, String versao, Integer kmAtual, String tipoVeiculo) {}
     record TrocaSummary(Long id, String pecaNome, String categoriaNome, LocalDate dataTroca, BigDecimal valor, BigDecimal maoDeObra, Integer km) {}
     record CategoriaTotal(String categoria, BigDecimal total) {}
     record FornecedorTotal(String fornecedor, BigDecimal total, Long quantidade) {}
@@ -73,7 +73,8 @@ public class DashboardApiController {
         BigDecimal totalCompras = nz(trocaRepository.totalGastoNoPeriodoPorTipo(carroId, inicio, fim, "COMPRA"));
         BigDecimal totalServicos = nz(trocaRepository.totalGastoNoPeriodoPorTipo(carroId, inicio, fim, "SERVICO"));
 
-        CarroDto carroDto = new CarroDto(carro.getId(), carro.getModelo(), carro.getAno(), carro.getMotor(), carro.getVersao(), carro.getKmAtual());
+        CarroDto carroDto = new CarroDto(carro.getId(), carro.getModelo(), carro.getAno(), carro.getMotor(), carro.getVersao(), carro.getKmAtual(),
+                carro.getTipoVeiculo() != null ? carro.getTipoVeiculo() : "CARRO");
 
         List<TrocaSummary> ultimasTrocas = trocaRepository.findTop5ByCarroIdAndDataTrocaBetweenOrderByDataTrocaDesc(carroId, inicio, fim).stream()
                 .map(t -> new TrocaSummary(t.getId(), t.getPeca().getNome(), t.getPeca().getCategoria().getNome(),

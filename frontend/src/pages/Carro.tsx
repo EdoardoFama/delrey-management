@@ -14,6 +14,7 @@ interface CarroData {
   cor: string
   fotoUrl: string | null
   observacoes: string
+  tipoVeiculo?: string
 }
 
 const FIELD_LABELS: Record<string, string> = {
@@ -74,7 +75,10 @@ export default function Carro() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white">Meu Del Rey</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2">
+          <span>{carro.tipoVeiculo === 'MOTO' || carro.modelo?.toLowerCase().includes('moto') ? '🏍️' : '🚗'}</span>
+          <span>{carro.modelo || 'Meu Veículo'}</span>
+        </h1>
         {!editing ? (
           <button
             onClick={() => setEditing(true)}

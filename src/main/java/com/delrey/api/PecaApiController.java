@@ -32,7 +32,7 @@ public class PecaApiController {
 
     record CategoriaDto(Long id, String nome) {}
     record PecaDto(Long id, String nome, CategoriaDto categoria, String codigoOem, String fabricante,
-                   Integer intervaloKm, Integer intervaloMeses, String observacoes) {}
+                   Integer intervaloKm, Integer intervaloMeses, String observacoes, String tipoVeiculo) {}
     record TrocaHistorico(Long id, LocalDate dataTroca, Integer km, BigDecimal valor, BigDecimal maoDeObra,
                           String fornecedor, Integer garantiaMeses, String observacoes) {}
     record PecaDetalhe(PecaDto peca, List<TrocaHistorico> historico) {}
@@ -40,7 +40,8 @@ public class PecaApiController {
     private PecaDto toDto(Peca p) {
         return new PecaDto(p.getId(), p.getNome(),
                 new CategoriaDto(p.getCategoria().getId(), p.getCategoria().getNome()),
-                p.getCodigoOem(), p.getFabricante(), p.getIntervaloKm(), p.getIntervaloMeses(), p.getObservacoes());
+                p.getCodigoOem(), p.getFabricante(), p.getIntervaloKm(), p.getIntervaloMeses(), p.getObservacoes(),
+                p.getTipoVeiculo() != null ? p.getTipoVeiculo() : "CARRO");
     }
 
     @GetMapping("/categorias")
@@ -52,22 +53,37 @@ public class PecaApiController {
     }
 
     @GetMapping
-    public List<PecaDto> listar(@RequestParam(required = false) String q) {
+    public List<PecaDto> listar(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String tipoVeiculo
+    ) {
+        Carro carro = userContextService.getCarroDoUsuarioAtual();
+        String tipo = (tipoVeiculo != null && !tipoVeiculo.isBlank())
+                ? tipoVeiculo.toUpperCase()
+                : (carro != null && carro.getTipoVeiculo() != null ? carro.getTipoVeiculo().toUpperCase() : "CARRO");
+
+        List<String> tipos = List.of(tipo, "TODOS");
         var pecas = (q == null || q.isBlank())
-                ? pecaRepository.findAllByOrderByNome()
-                : pecaRepository.findByNomeContainingIgnoreCaseOrderByNome(q);
+                ? pecaRepository.findAllByTiposVeiculoOrderByNome(tipos)
+                : pecaRepository.findByTiposVeiculoAndNome(tipos, q.trim());
         return pecas.stream().map(this::toDto).toList();
     }
 
-    record PecaCreateRequest(String nome, Long categoriaId) {}
+    record PecaCreateRequest(String nome, Long categoriaId, String tipoVeiculo) {}
     record PecaUpdateRequest(String nome, String codigoOem, String fabricante,
-                              Integer intervaloKm, Integer intervaloMeses, String observacoes) {}
+                              Integer intervaloKm, Integer intervaloMeses, String observacoes, String tipoVeiculo) {}
 
     @PostMapping
     public PecaDto criar(@RequestBody PecaCreateRequest req) {
+        Carro carro = userContextService.getCarroDoUsuarioAtual();
+        String tipo = req.tipoVeiculo() != null && !req.tipoVeiculo().isBlank()
+                ? req.tipoVeiculo().toUpperCase()
+                : (carro != null && carro.getTipoVeiculo() != null ? carro.getTipoVeiculo().toUpperCase() : "CARRO");
+
         Peca peca = new Peca();
         peca.setNome(req.nome().trim());
         peca.setCategoria(categoriaRepository.findById(req.categoriaId()).orElseThrow());
+        peca.setTipoVeiculo(tipo);
         return toDto(pecaRepository.save(peca));
     }
 
@@ -80,6 +96,7 @@ public class PecaApiController {
         if (req.intervaloKm() != null) peca.setIntervaloKm(req.intervaloKm());
         if (req.intervaloMeses() != null) peca.setIntervaloMeses(req.intervaloMeses());
         if (req.observacoes() != null) peca.setObservacoes(req.observacoes());
+        if (req.tipoVeiculo() != null && !req.tipoVeiculo().isBlank()) peca.setTipoVeiculo(req.tipoVeiculo().toUpperCase());
         return toDto(pecaRepository.save(peca));
     }
 

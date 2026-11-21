@@ -5,6 +5,7 @@ interface CarroInfo {
   ano?: number
   placa?: string
   kmAtual?: number
+  tipoVeiculo?: string
 }
 
 interface TopHeaderProps {
@@ -40,6 +41,7 @@ export default function TopHeader({ carro, onOpenMobile }: TopHeaderProps) {
     current = { title: 'Gestão Veicular', icon: '🏎️', category: 'Sistema' }
   }
 
+  const isMoto = carro?.tipoVeiculo === 'MOTO' || carro?.modelo?.toLowerCase().includes('moto') || carro?.modelo?.toLowerCase().includes('suzuki')
   const veiculoNome = carro?.modelo ? `${carro.modelo} ${carro.ano || ''}` : 'Del Rey 1990'
 
   return (
@@ -79,7 +81,7 @@ export default function TopHeader({ carro, onOpenMobile }: TopHeaderProps) {
             to="/carro"
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-900/20 hover:bg-purple-900/35 border border-purple-500/30 text-xs font-medium text-purple-300 hover:text-white transition-all shadow-sm"
           >
-            <span>🚗</span>
+            <span>{isMoto ? '🏍️' : '🚗'}</span>
             <span>{veiculoNome}</span>
           </NavLink>
         </div>

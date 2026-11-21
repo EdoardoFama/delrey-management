@@ -8,6 +8,20 @@ export default function Pecas() {
   const [pecas, setPecas] = useState<Peca[]>([])
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
+  const [carroNome, setCarroNome] = useState<string>('Catálogo de Peças')
+
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem('cached_carro')
+      if (cached) {
+        const c = JSON.parse(cached)
+        if (c?.modelo) setCarroNome(`Catálogo de Peças · ${c.modelo}`)
+      }
+    } catch {}
+    api.getCarro().then((c: any) => {
+      if (c?.modelo) setCarroNome(`Catálogo de Peças · ${c.modelo}`)
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -30,7 +44,7 @@ export default function Pecas() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-white">Peças</h1>
-        <p className="text-gray-400 mt-1">Catálogo do AP 1.8 Ghia</p>
+        <p className="text-gray-400 mt-1">{carroNome}</p>
       </div>
 
       <input

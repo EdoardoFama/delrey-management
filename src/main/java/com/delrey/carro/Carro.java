@@ -29,5 +29,8 @@ public class Carro {
 
     private String usuario;
 
+    @Column(name = "tipo_veiculo")
+    private String tipoVeiculo = "CARRO";
+
     private String observacoes;
 }

@@ -31,5 +31,8 @@ public class Peca {
     @Column(name = "intervalo_meses")
     private Integer intervaloMeses;
 
+    @Column(name = "tipo_veiculo")
+    private String tipoVeiculo = "CARRO";
+
     private String observacoes;
 }

@@ -5,6 +5,7 @@ export interface Carro {
   motor: string
   versao: string
   kmAtual: number
+  tipoVeiculo?: string
 }
 
 export interface Categoria {
@@ -21,6 +22,7 @@ export interface Peca {
   intervaloKm?: number
   intervaloMeses?: number
   observacoes?: string
+  tipoVeiculo?: string
 }
 
 export interface Troca {

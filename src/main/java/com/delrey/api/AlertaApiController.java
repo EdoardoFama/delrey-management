@@ -51,6 +51,8 @@ public class AlertaApiController {
     public List<AlertaManutencao> manutencao() {
         Carro carro = userContextService.getCarroDoUsuarioAtual();
         Integer kmAtual = carro != null ? carro.getKmAtual() : null;
+        String tipoVeiculo = (carro != null && carro.getTipoVeiculo() != null) ? carro.getTipoVeiculo().toUpperCase() : "CARRO";
+        List<String> tipos = List.of(tipoVeiculo, "TODOS");
         LocalDate hoje = LocalDate.now();
 
         Map<Long, Troca> ultimaPorPeca = (carro != null ? trocaRepository.ultimaTrocaDeCadaPeca(carro.getId()) : Collections.<Troca>emptyList())
@@ -58,7 +60,7 @@ public class AlertaApiController {
                 .collect(Collectors.toMap(t -> t.getPeca().getId(), t -> t, (a, b) -> a));
 
         List<AlertaManutencao> alertas = new ArrayList<>();
-        for (Peca peca : pecaRepository.findAllByOrderByNome()) {
+        for (Peca peca : pecaRepository.findAllByTiposVeiculoOrderByNome(tipos)) {
             Integer intervaloKm = peca.getIntervaloKm();
             Integer intervaloMeses = peca.getIntervaloMeses();
             if (intervaloKm == null && intervaloMeses == null) continue;
